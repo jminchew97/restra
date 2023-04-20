@@ -2,7 +2,6 @@ package com.example.storage
 
 import com.example.models.Restaurant
 import com.example.models.RestaurantId
-import kotlin.reflect.typeOf
 
 class InMemoryRestaurantStore : RestaurantStore {
     private val internal = mutableMapOf<RestaurantId, Restaurant>()
@@ -18,4 +17,15 @@ class InMemoryRestaurantStore : RestaurantStore {
 
         return internal.remove(id) != null
     }
+
+    override fun createRestaurant(restaurant: Restaurant): Boolean {
+
+        if (internal.containsKey(restaurant.id)) return false // restaurant already exists
+
+        internal[restaurant.id] = restaurant // add restaurant
+        return true
+
+    }
+
+
 }

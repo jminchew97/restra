@@ -8,6 +8,8 @@ interface RestaurantStore {
 
     fun getRestaurant(id: RestaurantId) : Restaurant?
 
+    fun createRestaurant(restaurant: Restaurant) : Boolean
     fun deleteRestaurant(id: RestaurantId): Boolean
+
 
 }
