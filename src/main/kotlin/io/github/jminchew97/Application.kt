@@ -1,7 +1,8 @@
-package com.example
+package io.github.jminchew97
 
 import io.ktor.server.application.*
-import com.example.plugins.*
+import io.github.jminchew97.plugins.configureRouting
+import io.github.jminchew97.plugins.configureSerialization
 
 fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)

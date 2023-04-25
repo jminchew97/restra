@@ -1,4 +1,4 @@
-package com.example.models
+package io.github.jminchew97.models
 
 import kotlinx.serialization.Serializable
 

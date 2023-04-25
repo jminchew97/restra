@@ -1,4 +1,4 @@
-package com.example.plugins
+package io.github.jminchew97.plugins
 
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.plugins.contentnegotiation.*

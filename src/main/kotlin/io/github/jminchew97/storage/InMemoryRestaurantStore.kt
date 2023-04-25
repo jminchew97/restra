@@ -1,7 +1,7 @@
-package com.example.storage
+package io.github.jminchew97.storage
 
-import com.example.models.Restaurant
-import com.example.models.RestaurantId
+import io.github.jminchew97.models.Restaurant
+import io.github.jminchew97.models.RestaurantId
 
 class InMemoryRestaurantStore : RestaurantStore {
     private val internal = mutableMapOf<RestaurantId, Restaurant>()

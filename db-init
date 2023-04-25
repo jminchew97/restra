@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+# To run script as different user run, run script with PGUSER=DifferentUser ./db-init
+# get environment variables, if environment variables are empty, set defaults.
+: ${RESTRA_POSTGRES_HOST:=localhost}
+: ${RESTRA_POSTGRES_PORT:=5432}
+: ${RESTRA_POSTGRES_NAME:=restra}
+: ${RESTRA_POSTGRES_USER:=restra}
+: ${RESTRA_POSTGRES_PASSWORD:=}
+
+psql -v u="$RESTRA_POSTGRES_USER" -v p="$RESTRA_POSTGRES_PASSWORD" <<SQL
+CREATE USER :"u" WITH PASSWORD :'p'
+SQL
+
+createdb $RESTRA_POSTGRES_NAME -O $RESTRA_POSTGRES_USER --host=$RESTRA_POSTGRES_HOST --port=$RESTRA_POSTGRES_PORT
+
+echo "Database and User created successfully."

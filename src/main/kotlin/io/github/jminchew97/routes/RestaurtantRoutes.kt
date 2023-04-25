@@ -1,13 +1,14 @@
-package com.example.routes
+package io.github.jminchew97.routes
 
 import io.ktor.server.routing.*
-import com.example.models.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import com.example.storage.*
-
+import io.github.jminchew97.models.Restaurant
+import io.github.jminchew97.models.RestaurantId
+import io.github.jminchew97.storage.InMemoryRestaurantStore
+import java.util.UUID
 fun Route.restaurantRouting() {
 
     route("/restaurant") {

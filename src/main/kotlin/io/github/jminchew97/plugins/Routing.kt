@@ -1,6 +1,7 @@
-package com.example.plugins
+package io.github.jminchew97.plugins
 
-import com.example.routes.*
+
+import io.github.jminchew97.routes.restaurantRouting
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*

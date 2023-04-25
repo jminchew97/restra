@@ -1,7 +1,6 @@
-package com.example.storage
+package io.github.jminchew97.storage
 
-import com.example.models.Restaurant
-import com.example.models.RestaurantId
+import io.github.jminchew97.models.*
 
 interface RestaurantStore {
     fun getRestaurants(): Collection<Restaurant>
@@ -11,5 +10,8 @@ interface RestaurantStore {
     fun createRestaurant(restaurant: Restaurant) : Boolean
     fun deleteRestaurant(id: RestaurantId): Boolean
 
+//    fun addMenuItem(id: MenuId): Boolean
+//    fun clearMenuItems(id: MenuId) : Boolean
+//    fun removeMenuItem(id: menuId)
 
 }

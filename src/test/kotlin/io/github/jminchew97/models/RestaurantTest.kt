@@ -1,4 +1,4 @@
-package com.example.models
+package io.github.jminchew97.models
 
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -9,7 +9,8 @@ import kotlin.test.assertEquals
 class RestaurantTest {
     @Test
     fun testJson(){
-        val r = Restaurant(RestaurantId("oasdoiaj10293u"),
+        val r = Restaurant(
+            RestaurantId("oasdoiaj10293u"),
             "oiasjd12", "123 avenue", "asdasdd")
 
         val s = Json.encodeToString(r)
