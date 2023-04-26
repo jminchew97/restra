@@ -1,5 +1,6 @@
 package io.github.jminchew97.routes
 
+import io.github.jminchew97.config.PostgresConfig
 import io.ktor.server.routing.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -9,7 +10,7 @@ import io.github.jminchew97.models.Restaurant
 import io.github.jminchew97.models.RestaurantId
 import io.github.jminchew97.storage.InMemoryRestaurantStore
 import java.util.UUID
-fun Route.restaurantRouting() {
+fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
 
     route("/restaurant") {
         val appApi: InMemoryRestaurantStore = InMemoryRestaurantStore()

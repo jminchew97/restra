@@ -1,6 +1,6 @@
 package io.github.jminchew97.config
 
-data class ConsiliaConfig(
+data class RestraConfig(
     val postgres: PostgresConfig
     // add more configs later on
 )
