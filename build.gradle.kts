@@ -20,7 +20,8 @@ application {
 repositories {
     mavenCentral()
 }
-
+val hikaricp_version: String by project
+val ehcache_version: String by project
 dependencies {
     implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktor_version")
@@ -29,4 +30,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    implementation("com.zaxxer:HikariCP:$hikaricp_version")
+    implementation("org.ehcache:ehcache:$ehcache_version")
+    implementation("io.github.config4k:config4k:0.5.0")
 }
