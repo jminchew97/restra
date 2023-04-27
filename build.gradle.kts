@@ -33,4 +33,5 @@ dependencies {
     implementation("com.zaxxer:HikariCP:$hikaricp_version")
     implementation("org.ehcache:ehcache:$ehcache_version")
     implementation("io.github.config4k:config4k:0.5.0")
+    implementation("org.postgresql:postgresql:42.5.1")
 }
