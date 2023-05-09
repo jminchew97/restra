@@ -11,5 +11,3 @@ services:
       - POSTGRES_PASSWORD=restra #password MUST be set, cannot be blank
     ports:
       - "5432:5432"
-
-

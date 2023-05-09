@@ -15,8 +15,6 @@ fun main(args: Array<String>): Unit =
 fun Application.module() {
     val config = ConfigFactory.load().extract<RestraConfig>()
 
-    val hks = HikariService(config.postgres)
-    println("Connection is valid: ${hks.getConnection().isValid(0)}")
     configureSerialization()
     configureRouting()
 }

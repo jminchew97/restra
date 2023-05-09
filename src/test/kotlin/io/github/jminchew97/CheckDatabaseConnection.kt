@@ -8,12 +8,13 @@ import kotlin.test.assertEquals
 
 class CheckDatabaseConnection {
     @Test
-    fun testConnectionIsValid(){
-        val config = ConfigFactory.load().extract<RestraConfig>()
+    fun testConnectionIsValid() {
+        val hks = HikariService(
+            ConfigFactory.load().extract<RestraConfig>().postgres)
 
-        val hks: HikariService = HikariService(config.postgres)
-
-        assertEquals(true, hks.getConnection().isValid(0))
+        // Test that we can get a valid connection to our docker-compose postgres service
+        // must have docker compose up and running for test to work: $ docker-compose up
+        assertEquals(true, hks.testConnection())
 
     }
 }
