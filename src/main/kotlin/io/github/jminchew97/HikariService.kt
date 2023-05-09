@@ -12,6 +12,8 @@ class HikariService(private val postgresConfig: PostgresConfig) {
     fun getConnection(): Connection {
         return ds.connection
     }
+    fun testConnection() =  ds.connection.isValid(0)
+
 
     private fun createDataSource(): HikariDataSource {
         val config = HikariConfig()

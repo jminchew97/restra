@@ -1,0 +1,13 @@
+# Use postgres/example user/password credentials
+version: '3.1'
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=restra # database with same name created automatically
+      - POSTGRES_PASSWORD=restra #password MUST be set, cannot be blank
+    ports:
+      - "5432:5432"
