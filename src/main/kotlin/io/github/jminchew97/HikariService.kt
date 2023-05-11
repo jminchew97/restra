@@ -12,6 +12,9 @@ class HikariService(private val postgresConfig: PostgresConfig) {
     fun getConnection(): Connection {
         return ds.connection
     }
+    fun <A> withConnection(f: (Connection) -> A): A {
+        return ds.connection.use(f)
+    }
     fun testConnection() =  ds.connection.isValid(0)
 
 
