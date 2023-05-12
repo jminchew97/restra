@@ -10,11 +10,11 @@ class RestaurantTest {
     @Test
     fun testJson(){
         val r = Restaurant(
-            RestaurantId("oasdoiaj10293u"),
-            "oiasjd12", "123 avenue", "asdasdd")
+            RestaurantId("1"),
+             "Burger Palace", "123 avenue")
 
         val s = Json.encodeToString(r)
-        val expectedJson = """{"id":"oasdoiaj10293u","menuId":"oiasjd12","name":"123 avenue","address":"asdasdd"}"""
+        val expectedJson = """{"id":"1","name":"Burger Palace","address":"123 avenue"}"""
         assertEquals(expectedJson, s)
 
         assertEquals(r, Json.decodeFromString(s))

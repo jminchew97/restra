@@ -1,6 +1,9 @@
 package io.github.jminchew97.routes
 
+import com.typesafe.config.ConfigFactory
+import io.github.config4k.extract
 import io.github.jminchew97.config.PostgresConfig
+import io.github.jminchew97.config.RestraConfig
 import io.ktor.server.routing.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -9,11 +12,17 @@ import io.ktor.server.response.*
 import io.github.jminchew97.models.Restaurant
 import io.github.jminchew97.models.RestaurantId
 import io.github.jminchew97.storage.InMemoryRestaurantStore
+import io.github.jminchew97.storage.PostgresRestaurantStore
 import java.util.UUID
+import io.github.config4k.extract
+import io.github.jminchew97.HikariService
+
 fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
 
-    route("/restaurant") {
-        val appApi: InMemoryRestaurantStore = InMemoryRestaurantStore()
+    route("/api/restaurant") {
+        val appApi: PostgresRestaurantStore = PostgresRestaurantStore(HikariService(
+            ConfigFactory.load().extract<RestraConfig>().postgres
+        ))
 
         get {
             call.respond(appApi.getRestaurants())
@@ -23,8 +32,9 @@ fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
                 "Bad request",
                 status = HttpStatusCode.BadRequest
             )
-
+            println("INSIDE ROUTE FUNCTION:")
             val restaurant = appApi.getRestaurant(RestaurantId(id))
+
             call.respond(
                 if (restaurant == null) {
                     call.respond(

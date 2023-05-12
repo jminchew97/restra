@@ -5,7 +5,7 @@ import io.github.jminchew97.config.RestraConfig
 import io.ktor.server.application.*
 import io.github.jminchew97.plugins.configureRouting
 import io.github.jminchew97.plugins.configureSerialization
-import io.github.config4k.extract
+
 
 
 fun main(args: Array<String>): Unit =
@@ -13,7 +13,7 @@ fun main(args: Array<String>): Unit =
 
 @Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
 fun Application.module() {
-    val config = ConfigFactory.load().extract<RestraConfig>()
+
 
     configureSerialization()
     configureRouting()
