@@ -9,25 +9,24 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.github.jminchew97.models.Restaurant
 import io.github.jminchew97.models.RestaurantId
-import io.github.jminchew97.storage.InMemoryRestaurantStore
 import io.github.jminchew97.storage.PostgresRestaurantStore
-import java.util.UUID
-import io.github.config4k.extract
 import io.github.jminchew97.HikariService
+import io.github.jminchew97.models.CreateRestaurant
 
 fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
 
     route("/api/restaurant") {
-        val appApi: PostgresRestaurantStore = PostgresRestaurantStore(HikariService(
-            ConfigFactory.load().extract<RestraConfig>().postgres
-        ))
+        val appApi: PostgresRestaurantStore = PostgresRestaurantStore(
+            HikariService(
+                ConfigFactory.load().extract<RestraConfig>().postgres
+            )
+        )
 
         get {
             call.respond(appApi.getRestaurants())
         }
-        get("{id?}") {
+        get("{id}") {
             val id = call.parameters["id"] ?: return@get call.respondText( // if id null, respond with 'Bad request'
                 "Bad request",
                 status = HttpStatusCode.BadRequest
@@ -51,12 +50,12 @@ fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
 
         }
         post {
-            val restaurantObj: Restaurant = call.receive<Restaurant>()
-            println(restaurantObj)
+            val restaurantObj: CreateRestaurant = call.receive<CreateRestaurant>()
+
             appApi.createRestaurant(restaurantObj)
-            call.respondText("Restaurant created", status = HttpStatusCode.Created)
+            call.respond(restaurantObj)
         }
-        delete("{id?}") {
+        delete("{id}") {
             val id = call.parameters["id"] ?: return@delete call.respondText(
                 "Bad request",
                 status = HttpStatusCode.BadRequest

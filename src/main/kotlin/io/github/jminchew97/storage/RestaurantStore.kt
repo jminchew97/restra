@@ -7,7 +7,7 @@ interface RestaurantStore {
 
     fun getRestaurant(id: RestaurantId) : Restaurant?
 
-    fun createRestaurant(restaurant: Restaurant) : Boolean
+    fun createRestaurant(restaurant: CreateRestaurant) : Boolean
     fun deleteRestaurant(id: RestaurantId): Boolean
 
 //    fun addMenuItem(id: MenuId): Boolean
