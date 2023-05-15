@@ -31,7 +31,7 @@ fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
             val id = call.parameters["id"] ?: call.respond(
                 status = HttpStatusCode.BadRequest, "bad"
             )
-            println("INSIDE ROUTE FUNCTION:")
+
             val restaurant = appApi.getRestaurant(RestaurantId(id.toString()))
 
             call.respond(

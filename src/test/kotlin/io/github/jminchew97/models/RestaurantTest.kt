@@ -19,5 +19,4 @@ class RestaurantTest {
 
         assertEquals(r, Json.decodeFromString(s))
     }
-
 }

@@ -62,7 +62,6 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
                 connection.prepareStatement("INSERT INTO restaurant (name, address,food_type) VALUES ('${restaurant.name}','${restaurant.address}',' ${restaurant.foodType}');")
             prp.executeUpdate()
         }
-        println("This is the returned value $resultInt")
         return resultInt == 1
     }
 
