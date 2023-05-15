@@ -13,6 +13,7 @@ import io.github.jminchew97.models.RestaurantId
 import io.github.jminchew97.storage.PostgresRestaurantStore
 import io.github.jminchew97.HikariService
 import io.github.jminchew97.models.CreateRestaurant
+import io.github.jminchew97.models.UpdateRestaurant
 
 fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
 
@@ -27,12 +28,11 @@ fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
             call.respond(appApi.getRestaurants())
         }
         get("{id}") {
-            val id = call.parameters["id"] ?: return@get call.respondText( // if id null, respond with 'Bad request'
-                "Bad request",
-                status = HttpStatusCode.BadRequest
+            val id = call.parameters["id"] ?: call.respond(
+                status = HttpStatusCode.BadRequest, "bad"
             )
             println("INSIDE ROUTE FUNCTION:")
-            val restaurant = appApi.getRestaurant(RestaurantId(id))
+            val restaurant = appApi.getRestaurant(RestaurantId(id.toString()))
 
             call.respond(
                 if (restaurant == null) {
@@ -44,7 +44,6 @@ fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
                     )
                 } else {
                     call.respond(restaurant)
-
                 }
             )
 
@@ -52,17 +51,38 @@ fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
         post {
             val restaurantObj: CreateRestaurant = call.receive<CreateRestaurant>()
 
-            appApi.createRestaurant(restaurantObj)
-            call.respond(restaurantObj)
+            if (appApi.createRestaurant(restaurantObj)) call.respond(restaurantObj) else call.respond(
+                status = HttpStatusCode.Created,
+                restaurantObj
+            )
+
+        }
+        put {
+            val updateRest = call.receive<UpdateRestaurant>()
+            if (appApi.updateRestaurant(updateRest)) call.respond(updateRest) else call.respond(
+                status = HttpStatusCode.BadRequest,
+                updateRest
+            )
+
+            call.respond(updateRest)
         }
         delete("{id}") {
-            val id = call.parameters["id"] ?: return@delete call.respondText(
-                "Bad request",
-                status = HttpStatusCode.BadRequest
+            val id = call.parameters["id"]
+            if (id == null) call.respond(status = HttpStatusCode.BadRequest, "bad")
+            else if (appApi.deleteRestaurant(RestaurantId(id))) call.respond(HttpStatusCode(204, "Deleted resource"))
+            else call.respond(HttpStatusCode(404, "Resource not found"))
+        }
+        delete {
+            call.respond(
+                status = HttpStatusCode.BadRequest,
+                "In order to delete restaurant you must enter an id e.g /restaurant/{id} "
             )
-            if (appApi.deleteRestaurant(RestaurantId(id))) call.respond(HttpStatusCode(204, "Deleted resource"))
-
-            call.respond(HttpStatusCode(404, "Resource not found"))
+        }
+        delete("/") {
+            call.respond(
+                status = HttpStatusCode.BadRequest,
+                "In order to delete restaurant you must enter an id e.g /restaurant/{id} "
+            )
         }
     }
 }
