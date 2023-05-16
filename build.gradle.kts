@@ -34,4 +34,5 @@ dependencies {
     implementation("org.ehcache:ehcache:$ehcache_version")
     implementation("io.github.config4k:config4k:0.5.0")
     implementation("org.postgresql:postgresql:42.5.1")
+    testImplementation("io.ktor:ktor-server-test-host-jvm:2.2.4")
 }

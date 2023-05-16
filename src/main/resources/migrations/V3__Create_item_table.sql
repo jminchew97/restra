@@ -1,5 +1,5 @@
 CREATE TYPE item_type AS ENUM ('dessert', 'drink', 'entree', 'appetizer');
-CREATE TABLE item
+CREATE TABLE items
 (
     id          SERIAL PRIMARY KEY,
     name        varchar,

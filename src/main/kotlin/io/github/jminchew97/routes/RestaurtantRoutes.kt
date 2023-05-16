@@ -1,9 +1,5 @@
 package io.github.jminchew97.routes
 
-import com.typesafe.config.ConfigFactory
-import io.github.config4k.extract
-import io.github.jminchew97.config.PostgresConfig
-import io.github.jminchew97.config.RestraConfig
 import io.ktor.server.routing.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -11,18 +7,13 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.github.jminchew97.models.RestaurantId
 import io.github.jminchew97.storage.PostgresRestaurantStore
-import io.github.jminchew97.HikariService
 import io.github.jminchew97.models.CreateRestaurant
 import io.github.jminchew97.models.UpdateRestaurant
 
-fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
+fun Route.restaurantRouting(appApi:PostgresRestaurantStore) {
 
-    route("/api/restaurant") {
-        val appApi: PostgresRestaurantStore = PostgresRestaurantStore(
-            HikariService(
-                ConfigFactory.load().extract<RestraConfig>().postgres
-            )
-        )
+    route("/api/restaurants") {
+
 
         get {
             call.respond(appApi.getRestaurants())
@@ -37,10 +28,7 @@ fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
             call.respond(
                 if (restaurant == null) {
                     call.respond(
-                        HttpStatusCode(
-                            404,
-                            "Resource not found"
-                        )
+                        HttpStatusCode(404, "Not found")
                     )
                 } else {
                     call.respond(restaurant)
@@ -84,5 +72,19 @@ fun Route.restaurantRouting(postgresConfig: PostgresConfig) {
                 "In order to delete restaurant you must enter an id e.g /restaurant/{id} "
             )
         }
+
+        // Menu routes
+        get("/{r_id}/menus") {
+            val rId = call.parameters["r_id"]
+
+            call.respond(
+                appApi.getMenusFromRestaurant(
+                    RestaurantId(rId.toString())
+                )
+            )
+
+        }
+
+
     }
 }
