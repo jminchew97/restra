@@ -1,5 +1,0 @@
-CREATE TABLE menus
-(
-    id         SERIAL PRIMARY KEY,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);

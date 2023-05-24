@@ -6,6 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.github.jminchew97.storage.PostgresRestaurantStore
 import io.github.jminchew97.models.*
+import io.ktor.server.request.*
 
 
 fun Route.menuRouting(appApi: PostgresRestaurantStore) {
@@ -17,27 +18,22 @@ fun Route.menuRouting(appApi: PostgresRestaurantStore) {
             }
 
             val menu = appApi.getMenu(MenuId(id.toString()))
-            if (menu == null){
+
+            if (menu == null) {
                 call.respond(status = HttpStatusCode.NotFound, "Menu not found")
 
             } else {
                 call.respond(menu)
             }
-
-
-
         }
-        post("/{id}"){
-            val restaurant_id = call.parameters["id"]
-            if (restaurant_id == null) call.respond(HttpStatusCode.BadRequest)
+        post {
+            val createMenu: CreateMenu = call.receive<CreateMenu>()
 
-            // TODO calculate best response
-            appApi.createMenu(
-                CreateMenu(
-                    RestaurantId(
-                        restaurant_id.toString())
-                )
-            )
+            appApi.createMenu(createMenu)
+        }
+        get{
+            call.respond(HttpStatusCode.OK, appApi.getAllMenus())
         }
     }
 }
+
