@@ -116,6 +116,32 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
                 "Deleted menu successfully"
             )
         }
+        put("/{restaurant_id}/menus/{menu_id}") {
 
+            // Use UpdateMenuReceive, to get JSON content for the new menu
+            val updateMenuReceive = call.receive<UpdateMenuReceive>()
+            // Combine the IDs from URI and also content from UpdateMenuReceive object
+            val newMenu = UpdateMenu(RestaurantId(call.parameters["restaurant_id"].toString()),
+                MenuId(call.parameters["menu_id"].toString()),
+                updateMenuReceive.name
+            )
+
+            println("Update Menu Contents $newMenu")
+            // Verify name is not empty and that the restaurant_id and menu_id are valid numbers
+            if (newMenu.name == "" || !(newMenu.restaurantId.unwrap.matches(Regex("\\d+")) ||
+                        newMenu.menuId.unwrap.matches(Regex("\\d+")))
+            ) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    "Name parameter for resource cannot be empty. Make sure {restaurant_id} and {menu_id} in URI are digits only."
+                )
+            }
+
+            if (appApi.updateMenu(newMenu)) call.respond(
+                HttpStatusCode.OK,
+                "Menu updated successfully"
+            ) else // Menu record was not updated for other reason
+                call.respond(HttpStatusCode.NotFound, "Request could not be processed. Ensure menu attempting to request exists.")
+        }
     }
 }

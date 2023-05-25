@@ -193,4 +193,18 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
         return resultList
     }
 
+    override fun updateMenu(newMenu: UpdateMenu): Boolean {
+        val result = hs.withConnection {
+            connection ->
+            val sql = "UPDATE menus SET name = ? WHERE id = ? AND restaurant_id = ?"
+            val prp = connection.prepareStatement(sql)
+
+            prp.setString(1,newMenu.name)
+            prp.setInt(2,newMenu.menuId.unwrap.toInt())
+            prp.setInt(3,newMenu.restaurantId.unwrap.toInt())
+            prp.executeUpdate()
+        }
+        return result == 1
+    }
+
 }
