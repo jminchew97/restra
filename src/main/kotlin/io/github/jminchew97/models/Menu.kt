@@ -11,7 +11,5 @@ data class UpdateMenuReceive(val name: String)
 
 @Serializable
 data class CreateMenu(var restaurantId: RestaurantId, val name: String)
-@Serializable
-@JvmInline
-value class MenuId(val unwrap: String)
+
 

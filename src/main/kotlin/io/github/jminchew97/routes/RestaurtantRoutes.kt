@@ -11,7 +11,7 @@ import io.github.jminchew97.storage.PostgresRestaurantStore
 fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
 
     route("/api/restaurants") {
-
+        //region Restaurant Routes
         // Restaurant specific routes
         get {
             call.respond(appApi.getRestaurants())
@@ -64,13 +64,9 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
                 "In order to delete restaurant you must enter an id e.g /restaurant/{id} "
             )
         }
-        delete("/") {
-            call.respond(
-                status = HttpStatusCode.BadRequest,
-                "In order to delete restaurant you must enter an id e.g /restaurant/{id} "
-            )
-        }
+        //endregion
 
+        //region Menu Routes
         // Menu routes
         get("/{r_id}/menus") {
             val rId = call.parameters["r_id"]
@@ -126,7 +122,6 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
                 updateMenuReceive.name
             )
 
-            println("Update Menu Contents $newMenu")
             // Verify name is not empty and that the restaurant_id and menu_id are valid numbers
             if (newMenu.name == "" || !(newMenu.restaurantId.unwrap.matches(Regex("\\d+")) ||
                         newMenu.menuId.unwrap.matches(Regex("\\d+")))
@@ -143,5 +138,12 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
             ) else // Menu record was not updated for other reason
                 call.respond(HttpStatusCode.NotFound, "Request could not be processed. Ensure menu attempting to request exists.")
         }
+        //endregion
+
+        //region Item Routes
+        get("/{restaurant_id}/menus/{menu_id}/items"){
+        //TODO
+    }
+        //endregion
     }
 }

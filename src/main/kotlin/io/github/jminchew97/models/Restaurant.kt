@@ -20,6 +20,3 @@ data class UpdateRestaurant(val id: RestaurantId, val name: String, val address:
 
 data class CreateRestaurant(val name: String, val address: String, val foodType:String)
 
-@Serializable
-@JvmInline
-value class RestaurantId(val unwrap: String)
