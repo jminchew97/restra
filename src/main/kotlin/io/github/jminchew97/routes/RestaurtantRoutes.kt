@@ -1,20 +1,18 @@
 package io.github.jminchew97.routes
 
+import io.github.jminchew97.models.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.github.jminchew97.models.RestaurantId
 import io.github.jminchew97.storage.PostgresRestaurantStore
-import io.github.jminchew97.models.CreateRestaurant
-import io.github.jminchew97.models.UpdateRestaurant
 
-fun Route.restaurantRouting(appApi:PostgresRestaurantStore) {
+fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
 
     route("/api/restaurants") {
 
-
+        // Restaurant specific routes
         get {
             call.respond(appApi.getRestaurants())
         }
@@ -84,7 +82,66 @@ fun Route.restaurantRouting(appApi:PostgresRestaurantStore) {
             )
 
         }
+        post("/{id}/menus") {
+            val restaurant_id = call.parameters["id"]
+            if (restaurant_id == null) call.respond(HttpStatusCode.BadRequest)
+
+            var createMenu: CreateMenu = call.receive<CreateMenu>()
+            createMenu.restaurantId = RestaurantId(restaurant_id.toString())
 
 
+            if (
+                appApi.createMenu(
+                    CreateMenu(
+                        RestaurantId(
+                            restaurant_id.toString()
+                        ), createMenu.name
+                    )
+                )
+            ) call.respond(HttpStatusCode.Created) else call.respond(HttpStatusCode.BadRequest)
+        }
+        delete("/{restaurant_id}/menus/{menu_id}") {
+            val restaurantId: String? = call.parameters["restaurant_id"]
+            val menuId: String? = call.parameters["menu_id"]
+
+            if (restaurantId == null || menuId == null) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    "Either restaurant_id or menu_id missing from URI. Be sure to follow this format: /{restaurant_id}/menus/{menu_id} ."
+                )
+            }
+
+            if (appApi.deleteMenu(RestaurantId(restaurantId.toString()), MenuId(menuId.toString()))) call.respond(
+                HttpStatusCode.NoContent,
+                "Deleted menu successfully"
+            )
+        }
+        put("/{restaurant_id}/menus/{menu_id}") {
+
+            // Use UpdateMenuReceive, to get JSON content for the new menu
+            val updateMenuReceive = call.receive<UpdateMenuReceive>()
+            // Combine the IDs from URI and also content from UpdateMenuReceive object
+            val newMenu = UpdateMenu(RestaurantId(call.parameters["restaurant_id"].toString()),
+                MenuId(call.parameters["menu_id"].toString()),
+                updateMenuReceive.name
+            )
+
+            println("Update Menu Contents $newMenu")
+            // Verify name is not empty and that the restaurant_id and menu_id are valid numbers
+            if (newMenu.name == "" || !(newMenu.restaurantId.unwrap.matches(Regex("\\d+")) ||
+                        newMenu.menuId.unwrap.matches(Regex("\\d+")))
+            ) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    "Name parameter for resource cannot be empty. Make sure {restaurant_id} and {menu_id} in URI are digits only."
+                )
+            }
+
+            if (appApi.updateMenu(newMenu)) call.respond(
+                HttpStatusCode.OK,
+                "Menu updated successfully"
+            ) else // Menu record was not updated for other reason
+                call.respond(HttpStatusCode.NotFound, "Request could not be processed. Ensure menu attempting to request exists.")
+        }
     }
 }

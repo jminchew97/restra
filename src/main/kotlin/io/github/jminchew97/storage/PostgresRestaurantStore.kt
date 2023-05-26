@@ -11,8 +11,9 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
         val resultList = mutableListOf<Restaurant>()
         hs.withConnection { connection ->
             val sqlStatement: String = "SELECT * FROM restaurants;"
-            val pst: PreparedStatement = connection.prepareStatement(sqlStatement)
-            val rs: ResultSet = pst.executeQuery()
+            val prp: PreparedStatement = connection.prepareStatement(sqlStatement)
+
+            val rs: ResultSet = prp.executeQuery()
 
             while (rs.next()) {
                 val rr: Restaurant = Restaurant(
@@ -32,9 +33,10 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
     override fun getRestaurant(id: RestaurantId): Restaurant? {
         val rr: Restaurant? = hs.withConnection { connection ->
 
-            val sqlStatement: String = "SELECT * FROM restaurants WHERE id='${id.unwrap}';"
-            val pst: PreparedStatement = connection.prepareStatement(sqlStatement)
-            val rs: ResultSet = pst.executeQuery()
+            val sqlStatement: String = "SELECT * FROM restaurants WHERE id=?;"
+            val prp: PreparedStatement = connection.prepareStatement(sqlStatement)
+            prp.setInt(1, id.unwrap.toInt())
+            val rs: ResultSet = prp.executeQuery()
 
 
 
@@ -62,7 +64,10 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
         val resultInt = hs.withConnection { connection ->
 
             val prp: PreparedStatement =
-                connection.prepareStatement("INSERT INTO restaurants (name, address,food_type) VALUES ('${restaurant.name}','${restaurant.address}',' ${restaurant.foodType}');")
+                connection.prepareStatement("INSERT INTO restaurants (name, address,food_type) VALUES (?,?,?);")
+            prp.setString(1, restaurant.name)
+            prp.setString(2, restaurant.address)
+            prp.setString(3, restaurant.foodType)
             prp.executeUpdate()
         }
         return resultInt == 1
@@ -70,8 +75,10 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
     override fun deleteRestaurant(id: RestaurantId): Boolean {
         val resultInt = hs.withConnection { connection ->
-            val prp: PreparedStatement = connection.prepareStatement("DELETE FROM restaurants WHERE id=${id.unwrap}")
+            val prp: PreparedStatement = connection.prepareStatement("DELETE FROM restaurants WHERE id=?;")
+            prp.setInt(1, id.unwrap.toInt())
             prp.executeUpdate()
+
         }
         return resultInt == 1
     }
@@ -93,8 +100,9 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
     override fun getMenusFromRestaurant(restId: RestaurantId): Collection<Menu> {
         val resultList: MutableList<Menu> = hs.withConnection { connection ->
-            val sql: String = "SELECT * FROM menus WHERE restaurant_id=${restId.unwrap.toInt()};"
+            val sql: String = "SELECT * FROM menus WHERE restaurant_id=?;"
             val prp = connection.prepareStatement(sql)
+            prp.setInt(1, restId.unwrap.toInt())
             val rs = prp.executeQuery()
 
             val menuList = mutableListOf<Menu>()
@@ -102,7 +110,9 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
                 menuList.add(
                     Menu(
                         MenuId(rs.getInt("id").toString()),
-                        RestaurantId(rs.getInt("restaurant_id").toString())
+                        RestaurantId(rs.getInt("restaurant_id").toString()),
+                        rs.getString("name"),
+                        rs.getString("created_at")
                     )
                 )
             }
@@ -112,36 +122,89 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
     }
 
     override fun getMenu(menuId: MenuId): Menu? {
-        val menu:Menu? = hs.withConnection { connection ->
-            val sql = "SELECT * FROM menus WHERE id='${menuId.unwrap}';"
+        val menu: Menu? = hs.withConnection { connection ->
+            val sql = "SELECT * FROM menus WHERE id=?;"
             val prp = connection.prepareStatement(sql)
-            val rs:ResultSet = prp.executeQuery()
 
-            if (!rs.next()){
+            prp.setInt(1, menuId.unwrap.toInt())
+            val rs: ResultSet = prp.executeQuery()
+
+            if (!rs.next()) {
                 return@withConnection null
             }
 
             Menu(
                 MenuId(rs.getInt("id").toString()),
-                RestaurantId(rs.getInt("restaurant_id").toString())
+                RestaurantId(rs.getInt("restaurant_id").toString()),
+                rs.getString("name"),
+                rs.getString("created_at")
             )
         }
         return menu
     }
 
     override fun createMenu(menu: CreateMenu): Boolean {
-        //TODO finish this function
-        val result = hs.withConnection {
-            connection ->
-            val sql = "INSERT INTO menus (restaurant_id) VALUES (${menu.restaurantId.unwrap})"
+
+        val result = hs.withConnection { connection ->
+
+
+            val sql = "INSERT INTO menus (restaurant_id, name) VALUES (?,?);"
             val prp = connection.prepareStatement(sql)
 
+            prp.setInt(1, menu.restaurantId.unwrap.toInt())
+            prp.setString(2, menu.name)
             prp.executeUpdate()
         }
-
+        println("result of inset menu statement: $result")
         return result == 1
     }
 
+    override fun deleteMenu(restId: RestaurantId, menuId: MenuId): Boolean {
+        val result = hs.withConnection { connection ->
+            val prp: PreparedStatement =
+                connection.prepareStatement("DELETE FROM menus WHERE restaurant_id=? AND id=?;")
+
+            prp.setInt(1, restId.unwrap.toInt())
+            prp.setInt(2, menuId.unwrap.toInt())
+            prp.executeUpdate()
+        }
+        return result == 1
+    }
+
+    override fun getAllMenus(): Collection<Menu> {
+        val resultList: MutableList<Menu> = hs.withConnection { connection ->
+            val sql: String = "SELECT * FROM menus;"
+            val prp = connection.prepareStatement(sql)
+            val rs = prp.executeQuery()
+
+            val menuList = mutableListOf<Menu>()
+            while (rs.next()) {
+                menuList.add(
+                    Menu(
+                        MenuId(rs.getInt("id").toString()),
+                        RestaurantId(rs.getInt("restaurant_id").toString()),
+                        rs.getString("name"),
+                        rs.getString("created_at")
+                    )
+                )
+            }
+            menuList
+        }
+        return resultList
+    }
+
+    override fun updateMenu(newMenu: UpdateMenu): Boolean {
+        val result = hs.withConnection {
+            connection ->
+            val sql = "UPDATE menus SET name = ? WHERE id = ? AND restaurant_id = ?"
+            val prp = connection.prepareStatement(sql)
+
+            prp.setString(1,newMenu.name)
+            prp.setInt(2,newMenu.menuId.unwrap.toInt())
+            prp.setInt(3,newMenu.restaurantId.unwrap.toInt())
+            prp.executeUpdate()
+        }
+        return result == 1
+    }
 
 }
-

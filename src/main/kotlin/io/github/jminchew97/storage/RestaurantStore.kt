@@ -11,5 +11,7 @@ interface RestaurantStore {
     fun getMenusFromRestaurant(restId: RestaurantId): Collection<Menu>
     fun getMenu(menuId: MenuId): Menu?
     fun createMenu(menu: CreateMenu): Boolean
-
+    fun deleteMenu(restId: RestaurantId, menuId: MenuId): Boolean
+    fun getAllMenus():Collection<Menu>
+    fun updateMenu(newMenu: UpdateMenu): Boolean
 }
