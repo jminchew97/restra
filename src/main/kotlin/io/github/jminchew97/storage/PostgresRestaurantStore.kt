@@ -40,18 +40,15 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
 
 
-            if (!rs.next()) {
-                return@withConnection null
-            }
+            if (!rs.next()) null else
 
-            val rr: Restaurant? = Restaurant(
+            Restaurant(
                 RestaurantId(rs.getString("id")),
                 rs.getString("name"),
                 rs.getString("address"),
                 rs.getString("food_type"),
                 rs.getString("created_at")
             )
-            rr
 
 
         }
@@ -129,9 +126,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             prp.setInt(1, menuId.unwrap.toInt())
             val rs: ResultSet = prp.executeQuery()
 
-            if (!rs.next()) {
-                return@withConnection null
-            }
+            if (!rs.next()) null else
 
             Menu(
                 MenuId(rs.getInt("id").toString()),
