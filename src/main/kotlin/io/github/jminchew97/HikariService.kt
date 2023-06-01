@@ -21,8 +21,9 @@ class HikariService(private val postgresConfig: PostgresConfig) {
 
 
     private fun createDataSource(): HikariDataSource {
+
         val config = HikariConfig()
-        config.jdbcUrl = "jdbc:postgresql://${postgresConfig.host}:${postgresConfig.port}/${postgresConfig.name}"
+        config.jdbcUrl = "jdbc:tc:postgresql:latest://${postgresConfig.host}:${postgresConfig.port}/${postgresConfig.name}"
         config.username = postgresConfig.user
         config.password = postgresConfig.password
         return HikariDataSource(config)

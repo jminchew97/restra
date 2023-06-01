@@ -39,7 +39,6 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             val rs: ResultSet = prp.executeQuery()
 
 
-
             if (!rs.next()) {
                 return@withConnection null
             }
