@@ -20,6 +20,9 @@ application {
 repositories {
     mavenCentral()
 }
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(11))
+}
 val hikaricp_version: String by project
 val ehcache_version: String by project
 dependencies {
@@ -34,7 +37,9 @@ dependencies {
     implementation("org.ehcache:ehcache:$ehcache_version")
     implementation("io.github.config4k:config4k:0.5.0")
     implementation("org.postgresql:postgresql:42.5.1")
-    testImplementation ("org.junit.jupiter:junit-jupiter:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.3")
     testImplementation ("org.testcontainers:testcontainers:1.18.3")
     testImplementation ("org.testcontainers:junit-jupiter:1.18.3")
     testImplementation("org.testcontainers:postgresql:1.18.3")
