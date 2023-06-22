@@ -14,5 +14,5 @@ interface RestaurantStore {
     fun deleteMenu(restId: RestaurantId, menuId: MenuId): Boolean
     fun getAllMenus():Collection<Menu>
     fun updateMenu(newMenu: UpdateMenu): Boolean
-    //TODO add functions for items
+    fun createItem(createItem: CreateItem):Boolean
 }
