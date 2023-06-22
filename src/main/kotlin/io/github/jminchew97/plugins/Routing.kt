@@ -5,7 +5,6 @@ import com.typesafe.config.ConfigFactory
 import io.github.config4k.extract
 import io.github.jminchew97.HikariService
 import io.github.jminchew97.config.RestraConfig
-import io.github.jminchew97.routes.itemRouting
 import io.github.jminchew97.routes.menuRouting
 import io.github.jminchew97.routes.restaurantRouting
 import io.github.jminchew97.storage.PostgresRestaurantStore
@@ -22,7 +21,6 @@ fun Application.configureRouting(appApi: PostgresRestaurantStore) {
     routing {
         restaurantRouting(appApi)
         menuRouting(appApi)
-        itemRouting(appApi)
         route("/"){
             get{
                 call.respond("working")

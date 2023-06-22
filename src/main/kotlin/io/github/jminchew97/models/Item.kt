@@ -6,7 +6,8 @@ data class CreateItem(
     val menuId: MenuId,
     val name: String,
     val description: String,
-    val price: Cents
+    val price: Cents,
+    val itemType:String
 )
 
 @Serializable
@@ -19,6 +20,9 @@ CreateItem and include the menuId from URI variable.
 data class CreateItemReceive(
     val name: String,
     val description: String,
-    val price: String
+    val price: String,
+    val itemType:String
 )
+
+
 

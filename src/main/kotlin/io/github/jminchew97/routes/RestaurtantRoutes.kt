@@ -7,6 +7,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.github.jminchew97.storage.PostgresRestaurantStore
+import io.github.jminchew97.utils.Conversions
 import java.sql.SQLException
 
 fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
@@ -152,7 +153,24 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
 
         //region Item Routes
         post("/menus/{menu_id}/items") {
-            val createItem = call.receive<CreateItem>()
+            val menuId = call.parameters["menu_id"]
+            println("This is the menu ID:" + menuId)
+            if (menuId == null) {
+                println("MENU ID IS NULL")
+                call.respond(HttpStatusCode.BadRequest)
+            }
+
+
+            val cir: CreateItemReceive = call.receive<CreateItemReceive>()
+
+            val createItem = CreateItem(
+                MenuId(menuId.toString()),
+                cir.name,
+                cir.description,
+                Conversions.convertMoneyStringToCents(cir.price),
+                cir.itemType
+            )
+
             if (appApi.createItem(createItem)) call.respond(
                 HttpStatusCode.Created,
                 "item created"

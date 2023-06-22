@@ -38,8 +38,6 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             prp.setInt(1, id.unwrap.toInt())
             val rs: ResultSet = prp.executeQuery()
 
-
-
             if (!rs.next()) null else
 
             Restaurant(
@@ -49,8 +47,6 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
                 rs.getString("food_type"),
                 rs.getString("created_at")
             )
-
-
         }
         return rr
     }
@@ -203,13 +199,14 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
     override fun createItem(createItem: CreateItem): Boolean {
         val result = hs.withConnection { connection ->
-            val sql = "INSERT INTO items (menu_id, name, price, description, item_type) VALUES (?,?,?,?,?);"
+            val sql = "INSERT INTO items (menu_id, name, price, description, item_type) VALUES (?,?,?,?,?::item_type);"
             val prp = connection.prepareStatement(sql)
 
             prp.setInt(1, createItem.menuId.unwrap.toInt())
             prp.setString(2, createItem.name)
             prp.setInt(3, createItem.price.unwrap)
             prp.setString(4, createItem.description)
+            prp.setString(5, createItem.itemType)
 
             prp.executeUpdate()
         }
