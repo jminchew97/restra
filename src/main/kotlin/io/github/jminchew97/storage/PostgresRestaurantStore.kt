@@ -83,16 +83,16 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
         return resultInt == 1
     }
 
-    override fun updateRestaurant(cr: UpdateRestaurant): Boolean {
+    override fun updateRestaurant(updateRest: UpdateRestaurant): Boolean {
         val result: Int = hs.withConnection { connection ->
             val sqlString = "UPDATE restaurants SET name = ?, address = ?, food_type = ? WHERE id = ?"
 
             val prep: PreparedStatement = connection.prepareStatement(sqlString)
 
-            prep.setString(1, cr.name)
-            prep.setString(2, cr.address)
-            prep.setString(3, cr.foodType)
-            prep.setInt(4, cr.id.unwrap.toInt())
+            prep.setString(1, updateRest.name)
+            prep.setString(2, updateRest.address)
+            prep.setString(3, updateRest.foodType)
+            prep.setInt(4, updateRest.id.unwrap.toInt())
             prep.executeUpdate()
         }
         return result == 1
@@ -194,17 +194,30 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
     }
 
     override fun updateMenu(newMenu: UpdateMenu): Boolean {
-        val result = hs.withConnection {
-            connection ->
+        val result = hs.withConnection { connection ->
             val sql = "UPDATE menus SET name = ? WHERE id = ? AND restaurant_id = ?"
             val prp = connection.prepareStatement(sql)
 
-            prp.setString(1,newMenu.name)
-            prp.setInt(2,newMenu.menuId.unwrap.toInt())
-            prp.setInt(3,newMenu.restaurantId.unwrap.toInt())
+            prp.setString(1, newMenu.name)
+            prp.setInt(2, newMenu.menuId.unwrap.toInt())
+            prp.setInt(3, newMenu.restaurantId.unwrap.toInt())
             prp.executeUpdate()
         }
         return result == 1
     }
 
+    override fun createItem(createItem: CreateItem): Boolean {
+        val result = hs.withConnection { connection ->
+            val sql = "INSERT INTO items (menu_id, name, price, description, item_type) VALUES (?,?,?,?,?);"
+            val prp = connection.prepareStatement(sql)
+
+            prp.setInt(1, createItem.menuId.unwrap.toInt())
+            prp.setString(2, createItem.name)
+            prp.setInt(3, createItem.price.unwrap)
+            prp.setString(4, createItem.description)
+
+            prp.executeUpdate()
+        }
+        return result == 1
+    }
 }
