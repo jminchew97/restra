@@ -45,6 +45,8 @@ ALTER TABLE items
     ADD COLUMN menu_id SERIAL;
 
 ALTER TABLE items
+    ADD COLUMN restaurant_id SERIAL;
+ALTER TABLE items
     ADD CONSTRAINT item_constraint_menu_id
         FOREIGN KEY (menu_id)
             REFERENCES menus (id);

@@ -7,7 +7,7 @@ interface RestaurantStore {
     fun getRestaurant(id: RestaurantId): Restaurant?
     fun createRestaurant(restaurant: CreateRestaurant): Boolean
     fun deleteRestaurant(id: RestaurantId): Boolean
-    fun updateRestaurant(cr: UpdateRestaurant): Boolean
+    fun updateRestaurant(updateRestaurant: UpdateRestaurant): Boolean
     fun getMenusFromRestaurant(restId: RestaurantId): Collection<Menu>
     fun getMenu(menuId: MenuId): Menu?
     fun createMenu(menu: CreateMenu): Boolean
@@ -15,4 +15,7 @@ interface RestaurantStore {
     fun getAllMenus():Collection<Menu>
     fun updateMenu(newMenu: UpdateMenu): Boolean
     fun createItem(createItem: CreateItem):Boolean
+    fun getItem(itemId:ItemId):Item
+    fun deleteItem(itemId:ItemId):Boolean
+
 }

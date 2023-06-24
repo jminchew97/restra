@@ -11,21 +11,7 @@ import io.ktor.server.request.*
 
 fun Route.menuRouting(appApi: PostgresRestaurantStore) {
     route("/api/menus") {
-        get("/{id}") {
-            val id: String? = call.parameters["id"]
-            if (id == null) {
-                call.respond(status = HttpStatusCode.BadRequest, "No menu id entered")
-            }
 
-            val menu = appApi.getMenu(MenuId(id.toString()))
-
-            if (menu == null) {
-                call.respond(status = HttpStatusCode.NotFound, "Menu not found")
-
-            } else {
-                call.respond(menu)
-            }
-        }
         post {
             val createMenu: CreateMenu = call.receive<CreateMenu>()
 

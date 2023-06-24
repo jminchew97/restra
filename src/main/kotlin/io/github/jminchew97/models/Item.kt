@@ -1,8 +1,11 @@
 package io.github.jminchew97.models
 
 import kotlinx.serialization.Serializable
+import java.util.*
+
 @Serializable
 data class CreateItem(
+    val restaurantId: RestaurantId,
     val menuId: MenuId,
     val name: String,
     val description: String,
@@ -22,6 +25,17 @@ data class CreateItemReceive(
     val description: String,
     val price: String,
     val itemType:String
+)
+
+data class Item(
+    val id:Int,
+    val menuId: MenuId,
+    val restaurantId: RestaurantId,
+    val name: String,
+    val description: String,
+    val price: Cents,
+    val itemType:String,
+    val dateCreated: Date
 )
 
 

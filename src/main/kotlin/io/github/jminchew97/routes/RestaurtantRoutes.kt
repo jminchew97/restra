@@ -1,5 +1,6 @@
 package io.github.jminchew97.routes
 
+import io.github.jminchew97.ItemTypeRepository.Companion.itemTypes
 import io.github.jminchew97.models.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
@@ -18,12 +19,12 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
         get {
             call.respond(appApi.getRestaurants())
         }
-        get("{id}") {
-            val id = call.parameters["id"] ?: call.respond(
+        get("{restaurant_id}") {
+            val restaurantId = call.parameters["restaurant_id"] ?: call.respond(
                 status = HttpStatusCode.BadRequest, "bad"
             )
 
-            val restaurant = appApi.getRestaurant(RestaurantId(id.toString()))
+            val restaurant = appApi.getRestaurant(RestaurantId(restaurantId.toString()))
             call.respond(
                 if (restaurant == null) {
                     call.respond(
@@ -53,11 +54,11 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
 
             call.respond(updateRest)
         }
-        delete("{id}") {
-            val id = call.parameters["id"]
-            if (id != null) {
+        delete("{restaurant_id}") {
+            val restaurantId = call.parameters["restaurant_id"]
+            if (restaurantId != null) {
                 try {
-                    appApi.deleteRestaurant(RestaurantId(id))
+                    appApi.deleteRestaurant(RestaurantId(restaurantId))
                 } catch (ex: SQLException) {
                     println(ex.message)
                     call.respond(status = HttpStatusCode.InternalServerError, "An error occurred within the server")
@@ -76,28 +77,28 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
 
         //region Menu Routes
         // Menu routes
-        get("/{r_id}/menus") {
-            val rId = call.parameters["r_id"]
+        get("/{restaurant_id}/menus") {
+            val restaurantId = call.parameters["restaurant_id"]
 
             call.respond(
                 appApi.getMenusFromRestaurant(
-                    RestaurantId(rId.toString())
+                    RestaurantId(restaurantId.toString())
                 )
             )
         }
-        post("/{id}/menus") {
-            val restaurant_id = call.parameters["id"]
-            if (restaurant_id == null) call.respond(HttpStatusCode.BadRequest)
+        post("/{restaurant_id}/menus") {
+            val restaurantId = call.parameters["restaurant_id"]
+            if (restaurantId == null) call.respond(HttpStatusCode.BadRequest)
 
             var createMenu: CreateMenu = call.receive<CreateMenu>()
-            createMenu.restaurantId = RestaurantId(restaurant_id.toString())
+            createMenu.restaurantId = RestaurantId(restaurantId.toString())
 
 
             if (
                 appApi.createMenu(
                     CreateMenu(
                         RestaurantId(
-                            restaurant_id.toString()
+                            restaurantId.toString()
                         ), createMenu.name
                     )
                 )
@@ -119,7 +120,7 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
                 "Deleted menu successfully"
             )
         }
-        put("/{restaurant_id}/menus/{menu_id}") {
+        put("/menus/{menu_id}") {
 
             // Use UpdateMenuReceive, to get JSON content for the new menu
             val updateMenuReceive = call.receive<UpdateMenuReceive>()
@@ -149,26 +150,42 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
                     "Request could not be processed. Ensure menu attempting to request exists."
                 )
         }
+        get("/menus/{menu_id}") {
+            val menuId: String? = call.parameters["menu_id"]
+            if (menuId == null) {
+                call.respond(status = HttpStatusCode.BadRequest, "No menu id entered")
+            }
+
+            val menu = appApi.getMenu(MenuId(menuId.toString()))
+
+            if (menu == null) {
+                call.respond(status = HttpStatusCode.NotFound, "Menu not found")
+
+            } else {
+                call.respond(menu)
+            }
+        }
         //endregion
 
         //region Item Routes
-        post("/menus/{menu_id}/items") {
+        post("/{restaurant_id}/menus/{menu_id}/items") {
             val menuId = call.parameters["menu_id"]
-            println("This is the menu ID:" + menuId)
-            if (menuId == null) {
-                println("MENU ID IS NULL")
-                call.respond(HttpStatusCode.BadRequest)
+            val restaurantId = call.parameters["restaurant_id"]
+            if (menuId == null || restaurantId == null) {
+                call.respond(HttpStatusCode.BadRequest, "Parameter in URI is null.")
             }
-
-
             val cir: CreateItemReceive = call.receive<CreateItemReceive>()
 
-            val createItem = CreateItem(
+            if (cir.itemType !in itemTypes) call.respond(HttpStatusCode.BadRequest, "Item type does not exist.")
+
+            val createItem = CreateItem( //Convert CreateRecievedItem into CreateItem
+                RestaurantId(restaurantId.toString()),
                 MenuId(menuId.toString()),
                 cir.name,
                 cir.description,
                 Conversions.convertMoneyStringToCents(cir.price),
                 cir.itemType
+
             )
 
             if (appApi.createItem(createItem)) call.respond(
@@ -178,6 +195,10 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
                 HttpStatusCode.BadRequest,
                 "Item not created"
             )
+        }
+
+        get("/menus/{menu_id}/items"){
+
         }
         //endregion
     }

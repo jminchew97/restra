@@ -40,13 +40,13 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
             if (!rs.next()) null else
 
-            Restaurant(
-                RestaurantId(rs.getString("id")),
-                rs.getString("name"),
-                rs.getString("address"),
-                rs.getString("food_type"),
-                rs.getString("created_at")
-            )
+                Restaurant(
+                    RestaurantId(rs.getString("id")),
+                    rs.getString("name"),
+                    rs.getString("address"),
+                    rs.getString("food_type"),
+                    rs.getString("created_at")
+                )
         }
         return rr
     }
@@ -124,12 +124,12 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
             if (!rs.next()) null else
 
-            Menu(
-                MenuId(rs.getInt("id").toString()),
-                RestaurantId(rs.getInt("restaurant_id").toString()),
-                rs.getString("name"),
-                rs.getString("created_at")
-            )
+                Menu(
+                    MenuId(rs.getInt("id").toString()),
+                    RestaurantId(rs.getInt("restaurant_id").toString()),
+                    rs.getString("name"),
+                    rs.getString("created_at")
+                )
         }
         return menu
     }
@@ -211,5 +211,27 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             prp.executeUpdate()
         }
         return result == 1
+    }
+
+    override fun getItem(itemId: ItemId): Item {
+        hs.withConnection { connection ->
+            val sql = "SELECT * FROM items WHERE id=?;"
+            val prp = connection.prepareStatement(sql)
+
+            prp.setInt(1, itemId.unwrap.toInt())
+            val rs: ResultSet = prp.executeQuery()
+
+            if (!rs.next()) null else
+
+                Item(
+                    
+                )
+        }
+        return menu
+        }
+    }
+
+    override fun deleteItem(itemId: ItemId): Boolean {
+        TODO("Not yet implemented")
     }
 }
