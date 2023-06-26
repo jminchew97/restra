@@ -1,6 +1,9 @@
 package io.github.jminchew97.models
 
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import java.time.OffsetDateTime
 import java.util.*
 
 @Serializable
@@ -10,7 +13,7 @@ data class CreateItem(
     val name: String,
     val description: String,
     val price: Cents,
-    val itemType:String
+    val itemType: String
 )
 
 @Serializable
@@ -24,18 +27,19 @@ data class CreateItemReceive(
     val name: String,
     val description: String,
     val price: String,
-    val itemType:String
+    val itemType: String
 )
 
+@Serializable
 data class Item(
-    val id:Int,
+    val id: ItemId,
     val menuId: MenuId,
     val restaurantId: RestaurantId,
     val name: String,
     val description: String,
     val price: Cents,
-    val itemType:String,
-    val dateCreated: Date
+    val itemType: ItemType,
+    val createAt:Instant
 )
 
 

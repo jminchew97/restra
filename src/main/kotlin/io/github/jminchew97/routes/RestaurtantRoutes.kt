@@ -1,6 +1,5 @@
 package io.github.jminchew97.routes
 
-import io.github.jminchew97.ItemTypeRepository.Companion.itemTypes
 import io.github.jminchew97.models.*
 import io.ktor.server.routing.*
 import io.ktor.http.*
@@ -176,8 +175,6 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
             }
             val cir: CreateItemReceive = call.receive<CreateItemReceive>()
 
-            if (cir.itemType !in itemTypes) call.respond(HttpStatusCode.BadRequest, "Item type does not exist.")
-
             val createItem = CreateItem( //Convert CreateRecievedItem into CreateItem
                 RestaurantId(restaurantId.toString()),
                 MenuId(menuId.toString()),
@@ -197,9 +194,37 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
             )
         }
 
-        get("/menus/{menu_id}/items"){
-
+        get("/menus/items/{item_id}") {
+            val itemId = call.parameters["item_id"]
+            if (itemId == null) {
+                call.respond(HttpStatusCode.BadRequest, "Parameter in URI is null.")
+            } else {
+                val item = appApi.getItem(ItemId(itemId))
+                if (item == null) call.respond("Item is null.") else call.respond(item)
+            }
+            //endregion
         }
-        //endregion
+        get("/menus/items"){
+            val items = appApi.getAllItems()
+            call.respond(items)
+        }
+        delete("/{restaurant_id}/menus/{menu_id}/items/{item_id}") {
+            val restaurantIdParam = call.parameters["restaurant_id"]
+            val menuIdParam = call.parameters["menu_id"]
+            val itemIdParam = call.parameters["item_id"]
+            if (
+                restaurantIdParam == null || menuIdParam == null || itemIdParam == null
+            ) call.respond(HttpStatusCode.BadRequest,"One of the required parameters are null in URI.")
+
+            val restaurantId = RestaurantId(restaurantIdParam.toString())
+            val menuId = MenuId(menuIdParam.toString())
+            val itemId = ItemId(itemIdParam.toString())
+            if (appApi.deleteItem(
+                itemId,
+                restaurantId,
+                menuId
+            ))
+                call.respond(HttpStatusCode.Accepted)
+        }
     }
 }

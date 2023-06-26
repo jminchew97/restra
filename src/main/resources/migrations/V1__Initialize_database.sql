@@ -4,7 +4,7 @@ CREATE TABLE restaurants
     name       varchar,
     address    varchar,
     food_type  varchar,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 INSERT INTO restaurants (name, address,food_type)
 VALUES ('Best Dim Sum', '123 da street', 'dim sum');
@@ -16,19 +16,19 @@ CREATE TABLE menus
 (
     id         SERIAL PRIMARY KEY,
     name       varchar,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 
-CREATE TYPE item_type AS ENUM ('dessert', 'drink', 'entree', 'appetizer');
+CREATE TYPE item_type AS ENUM ('DESSERT', 'DRINK', 'ENTREE', 'APPETIZER');
 CREATE TABLE items
 (
     id          SERIAL PRIMARY KEY,
-    name        varchar,
+    name        varchar not null,
     price       integer,
     description varchar,
     item_type   item_type,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at  timestamptz default current_timestamp
 );
 
 

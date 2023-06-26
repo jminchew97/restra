@@ -2,8 +2,10 @@ package io.github.jminchew97.storage
 
 import io.github.jminchew97.HikariService
 import io.github.jminchew97.models.*
+import kotlinx.datetime.Clock
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import kotlinx.datetime.Instant
 
 class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
@@ -146,7 +148,6 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             prp.setString(2, menu.name)
             prp.executeUpdate()
         }
-        println("result of inset menu statement: $result")
         return result == 1
     }
 
@@ -206,32 +207,73 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             prp.setString(2, createItem.name)
             prp.setInt(3, createItem.price.unwrap)
             prp.setString(4, createItem.description)
-            prp.setString(5, createItem.itemType)
+            prp.setString(5, createItem.itemType.uppercase())
+            prp.executeUpdate()
+        }
+        return result == 1
+    }
+
+    override fun getItem(itemId: ItemId): Item? {
+        val item = hs.withConnection { connection ->
+            val sql = "select * from items where id=?"
+            val prp = connection.prepareStatement(sql)
+
+            prp.setInt(1, itemId.unwrap.toInt())
+            val rs: ResultSet = prp.executeQuery()
+
+            Item(
+                ItemId(rs.getString("id")),
+                MenuId(rs.getString("menu_id")),
+                RestaurantId(rs.getString("restaurant_id")),
+                rs.getString("name"),
+                rs.getString("description"),
+                Cents(rs.getInt("price")),
+                ItemType.valueOf(rs.getString("item_type").uppercase()),
+                Instant.parse(rs.getString("created_at").replace(" ", "T"))
+            )
+        }
+        return item
+    }
+
+
+    override fun deleteItem(itemId: ItemId,restId: RestaurantId,menuId: MenuId): Boolean {
+        val result = hs.withConnection { connection ->
+            val prp: PreparedStatement =
+                connection.prepareStatement("DELETE FROM items WHERE id=? and menu_id=? and restaurant_id=?;")
+
+            prp.setInt(1, itemId.unwrap.toInt())
+            prp.setInt(2, menuId.unwrap.toInt())
+            prp.setInt(3, restId.unwrap.toInt())
 
             prp.executeUpdate()
         }
         return result == 1
     }
 
-    override fun getItem(itemId: ItemId): Item {
-        hs.withConnection { connection ->
-            val sql = "SELECT * FROM items WHERE id=?;"
+    override fun getAllItems(): Collection<Item> {
+        val resultList: MutableList<Item> = hs.withConnection {
+            connection ->
+            val sql: String = "SELECT * FROM items;"
             val prp = connection.prepareStatement(sql)
+            val rs = prp.executeQuery()
 
-            prp.setInt(1, itemId.unwrap.toInt())
-            val rs: ResultSet = prp.executeQuery()
-
-            if (!rs.next()) null else
-
-                Item(
-                    
+            val itemList = mutableListOf<Item>()
+            while (rs.next()) {
+                itemList.add(
+                    Item(
+                        ItemId(rs.getString("id")),
+                        MenuId(rs.getString("menu_id")),
+                        RestaurantId(rs.getString("restaurant_id")),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        Cents(rs.getInt("price")),
+                        ItemType.valueOf(rs.getString("item_type").uppercase()),
+                        Instant.parse(rs.getString("created_at").replace(" ", "T"))
+                    )
                 )
+            }
+            itemList
         }
-        return menu
-        }
-    }
-
-    override fun deleteItem(itemId: ItemId): Boolean {
-        TODO("Not yet implemented")
+        return resultList
     }
 }
