@@ -36,4 +36,11 @@ dependencies {
     implementation("org.postgresql:postgresql:42.5.1")
     testImplementation("io.ktor:ktor-server-test-host-jvm:2.2.4")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+    testImplementation("org.testcontainers:postgresql:1.18.3")
+    testImplementation ("org.junit.jupiter:junit-jupiter:5.8.1")
+    testImplementation ("org.testcontainers:testcontainers:1.18.3")
+    testImplementation ("org.testcontainers:junit-jupiter:1.18.3")
+
+
+
 }
