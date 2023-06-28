@@ -200,7 +200,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
     override fun createItem(createItem: CreateItem): Boolean {
         val result = hs.withConnection { connection ->
-            val sql = "INSERT INTO items (menu_id, name, price, description, item_type) VALUES (?,?,?,?,?::item_type);"
+            val sql = "INSERT INTO items (menu_id, name, price, description, item_type, restaurant_id) VALUES (?, ?, ?, ?, ?::item_type, ?);"
             val prp = connection.prepareStatement(sql)
 
             prp.setInt(1, createItem.menuId.unwrap.toInt())
@@ -208,6 +208,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             prp.setInt(3, createItem.price.unwrap)
             prp.setString(4, createItem.description)
             prp.setString(5, createItem.itemType.uppercase())
+            prp.setInt(6, createItem.restaurantId.unwrap.toInt())
             prp.executeUpdate()
         }
         return result == 1
@@ -220,7 +221,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
             prp.setInt(1, itemId.unwrap.toInt())
             val rs: ResultSet = prp.executeQuery()
-
+            rs.next()
             Item(
                 ItemId(rs.getString("id")),
                 MenuId(rs.getString("menu_id")),
@@ -236,7 +237,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
     }
 
 
-    override fun deleteItem(itemId: ItemId,restId: RestaurantId,menuId: MenuId): Boolean {
+    override fun deleteItem(itemId: ItemId, restId: RestaurantId, menuId: MenuId): Boolean {
         val result = hs.withConnection { connection ->
             val prp: PreparedStatement =
                 connection.prepareStatement("DELETE FROM items WHERE id=? and menu_id=? and restaurant_id=?;")
@@ -251,8 +252,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
     }
 
     override fun getAllItems(): Collection<Item> {
-        val resultList: MutableList<Item> = hs.withConnection {
-            connection ->
+        val resultList: MutableList<Item> = hs.withConnection { connection ->
             val sql: String = "SELECT * FROM items;"
             val prp = connection.prepareStatement(sql)
             val rs = prp.executeQuery()
@@ -275,5 +275,87 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             itemList
         }
         return resultList
+    }
+
+    override fun updateItem(updateItem: UpdateItem): Boolean {
+        val result = hs.withConnection { connection ->
+            val prp: PreparedStatement =
+                connection.prepareStatement(
+                    """
+                    UPDATE items
+                    SET menu_id=?, restaurant_id=?, name=?, description=?, price=?, item_type=?::item_type
+                    WHERE id=?
+                    """
+                )
+            prp.setInt(1, updateItem.menuId.unwrap.toInt())
+            prp.setInt(2, updateItem.restaurantId.unwrap.toInt())
+            prp.setString(3, updateItem.name)
+            prp.setString(4, updateItem.description)
+            prp.setInt(5, updateItem.price.unwrap)
+            prp.setString(6, updateItem.itemType)
+            prp.setInt(7,updateItem.itemId.unwrap.toInt())
+
+
+            prp.executeUpdate() == 1
+        }
+        return result
+    }
+
+    override fun getItemsByMenu(menuId: MenuId): Collection<Item> {
+        val result = hs.withConnection {
+            connection ->
+            val sql = "select * from items where menu_id=?"
+            val prp = connection.prepareStatement(sql)
+
+            prp.setInt(1,menuId.unwrap.toInt())
+            val rs = prp.executeQuery()
+
+            val itemList = mutableListOf<Item>()
+            while (rs.next()) {
+                itemList.add(
+                    Item(
+                        ItemId(rs.getString("id")),
+                        MenuId(rs.getString("menu_id")),
+                        RestaurantId(rs.getString("restaurant_id")),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        Cents(rs.getInt("price")),
+                        ItemType.valueOf(rs.getString("item_type").uppercase()),
+                        Instant.parse(rs.getString("created_at").replace(" ", "T"))
+                    )
+                )
+            }
+            itemList
+        }
+        return result
+    }
+
+    override fun getItemsByRestaurant(restaurantId: RestaurantId): Collection<Item> {
+        val result = hs.withConnection {
+                connection ->
+            val sql = "select * from items where restaurant_id=?"
+            val prp = connection.prepareStatement(sql)
+
+            prp.setInt(1,restaurantId.unwrap.toInt())
+            val rs = prp.executeQuery()
+
+            val itemList = mutableListOf<Item>()
+            while (rs.next()) {
+                itemList.add(
+                    Item(
+                        ItemId(rs.getString("id")),
+                        MenuId(rs.getString("menu_id")),
+                        RestaurantId(rs.getString("restaurant_id")),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        Cents(rs.getInt("price")),
+                        ItemType.valueOf(rs.getString("item_type").uppercase()),
+                        Instant.parse(rs.getString("created_at").replace(" ", "T"))
+                    )
+                )
+            }
+            itemList
+        }
+        return result
     }
 }

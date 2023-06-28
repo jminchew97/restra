@@ -28,4 +28,8 @@ data class CreateMenu(
     val name: String
 )
 
+@Serializable
+data class MenuReceive(
+    val name: String
+)
 

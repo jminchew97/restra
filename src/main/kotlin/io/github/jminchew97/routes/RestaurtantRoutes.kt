@@ -8,6 +8,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.github.jminchew97.storage.PostgresRestaurantStore
 import io.github.jminchew97.utils.Conversions
+import io.github.jminchew97.utils.isDigit
 import java.sql.SQLException
 
 fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
@@ -89,8 +90,11 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
             val restaurantId = call.parameters["restaurant_id"]
             if (restaurantId == null) call.respond(HttpStatusCode.BadRequest)
 
-            var createMenu: CreateMenu = call.receive<CreateMenu>()
-            createMenu.restaurantId = RestaurantId(restaurantId.toString())
+            val menuNoRestaurantId: MenuReceive = call.receive<MenuReceive>()
+
+            val createMenu = CreateMenu(RestaurantId(restaurantId.toString()),
+                menuNoRestaurantId.name
+                )
 
 
             if (
@@ -130,9 +134,9 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
                 updateMenuReceive.name
             )
 
-            // Verify name is not empty and that the restaurant_id and menu_id are valid numbers
-            if (newMenu.name == "" || !(newMenu.restaurantId.unwrap.matches(Regex("\\d+")) ||
-                        newMenu.menuId.unwrap.matches(Regex("\\d+")))
+            // Verify name is not empty and that the restaurant_id and menu_id are digits
+            if (newMenu.name == "" || !(newMenu.restaurantId.unwrap.isDigit()) ||
+                newMenu.menuId.unwrap.isDigit()
             ) {
                 call.respond(
                     HttpStatusCode.BadRequest,
@@ -204,9 +208,30 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
             }
             //endregion
         }
-        get("/menus/items"){
+        get("/menus/items") {
             val items = appApi.getAllItems()
             call.respond(items)
+        }
+        put("/menus/items/{item_id}") {
+            val idParam = call.parameters["item_id"]
+
+            // Id Validation
+            if (idParam == null || !(idParam.isDigit())) call.respond(HttpStatusCode.BadRequest,"ItemId parameter in URI either null or not a digit.")
+            else if (idParam.toInt() < 0 ) call.respond(HttpStatusCode.BadRequest, "ItemId parameter in URI cannot be negative.")
+
+
+            val itemWithoutId = call.receive<CreateItem>()
+
+            val updateItem = UpdateItem(
+                ItemId(idParam.toString()),
+                itemWithoutId.restaurantId,
+                itemWithoutId.menuId,
+                itemWithoutId.name,
+                itemWithoutId.description,
+                itemWithoutId.price,
+                itemWithoutId.itemType
+            )
+            if (appApi.updateItem(updateItem)) call.respond(HttpStatusCode.OK, "Item updated") else call.respond(HttpStatusCode.NotModified)
         }
         delete("/{restaurant_id}/menus/{menu_id}/items/{item_id}") {
             val restaurantIdParam = call.parameters["restaurant_id"]
@@ -214,17 +239,40 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
             val itemIdParam = call.parameters["item_id"]
             if (
                 restaurantIdParam == null || menuIdParam == null || itemIdParam == null
-            ) call.respond(HttpStatusCode.BadRequest,"One of the required parameters are null in URI.")
+            ) call.respond(HttpStatusCode.BadRequest, "One of the required parameters are null in URI.")
 
             val restaurantId = RestaurantId(restaurantIdParam.toString())
             val menuId = MenuId(menuIdParam.toString())
             val itemId = ItemId(itemIdParam.toString())
             if (appApi.deleteItem(
-                itemId,
-                restaurantId,
-                menuId
-            ))
+                    itemId,
+                    restaurantId,
+                    menuId
+                )
+            )
                 call.respond(HttpStatusCode.Accepted)
+        }
+        get("/menus/{menu_id}/items") {
+            val idParam = call.parameters["menu_id"]
+
+            // Id Validation
+            if (idParam == null || !(idParam.isDigit())) call.respond(HttpStatusCode.BadRequest,"MenuId parameter in URI either null or not a digit.")
+            else if (idParam.toInt() < 0 ) call.respond(HttpStatusCode.BadRequest, "MenuId parameter in URI cannot be negative.")
+
+            val items = appApi.getItemsByMenu(MenuId(idParam.toString()))
+
+            call.respond(items)
+        }
+        get("/{restaurant_id}/menus/items") {
+            val idParam = call.parameters["restaurant_id"]
+
+            // Id Validation
+            if (idParam == null || !(idParam.isDigit())) call.respond(HttpStatusCode.BadRequest,"RestaurantId parameter in URI either null or not a digit.")
+            else if (idParam.toInt() < 0 ) call.respond(HttpStatusCode.BadRequest, "RestaurantId parameter in URI cannot be negative.")
+
+            val items = appApi.getItemsByRestaurant(RestaurantId(idParam.toString()))
+
+            call.respond(items)
         }
     }
 }

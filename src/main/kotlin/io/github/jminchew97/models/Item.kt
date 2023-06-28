@@ -15,7 +15,16 @@ data class CreateItem(
     val price: Cents,
     val itemType: String
 )
-
+@Serializable
+data class UpdateItem(
+    val itemId:ItemId,
+    val restaurantId: RestaurantId,
+    val menuId: MenuId,
+    val name: String,
+    val description: String,
+    val price: Cents,
+    val itemType: String
+)
 @Serializable
 /**
 Cannot deserialize JSON directly to CreateItem since the required field menuId

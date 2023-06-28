@@ -18,5 +18,8 @@ interface RestaurantStore {
     fun getItem(itemId:ItemId):Item?
     fun deleteItem(itemId:ItemId, restId: RestaurantId,menuId: MenuId):Boolean
     fun getAllItems(): Collection<Item>
+    fun updateItem(updateItem: UpdateItem):Boolean
+    fun getItemsByRestaurant(restaurantId: RestaurantId):Collection<Item>
+    fun getItemsByMenu(menuId: MenuId): Collection<Item>
 
 }
