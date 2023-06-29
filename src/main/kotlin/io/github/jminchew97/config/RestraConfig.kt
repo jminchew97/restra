@@ -11,4 +11,3 @@ data class PostgresConfig(
     val user: String,
     val password: String,
 )
-// add more configs later on

@@ -1,6 +1,6 @@
 CREATE TABLE restaurants
 (
-    id         UUID PRIMARY KEY,
+    id         UUID PRIMARY KEY ,
     name       varchar,
     address    varchar,
     food_type  varchar,
