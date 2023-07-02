@@ -1,6 +1,8 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE restaurants
 (
-    id         UUID PRIMARY KEY ,
+    id         UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name       varchar,
     address    varchar,
     food_type  varchar,
@@ -9,7 +11,7 @@ CREATE TABLE restaurants
 
 CREATE TABLE menus
 (
-    id         UUID PRIMARY KEY,
+    id         UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name       varchar,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -17,7 +19,7 @@ CREATE TABLE menus
 CREATE TYPE item_type AS ENUM ('DESSERT', 'DRINK', 'ENTREE', 'APPETIZER');
 CREATE TABLE items
 (
-    id          UUID PRIMARY KEY,
+    id          UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name        varchar not null,
     price       integer,
     description varchar,
@@ -44,4 +46,3 @@ ALTER TABLE items
     ADD CONSTRAINT item_constraint_menu_id
         FOREIGN KEY (menu_id)
             REFERENCES menus (id);
-

@@ -6,7 +6,7 @@ services:
     image: flyway/flyway
     command: -url=jdbc:postgresql://db:5432/restra -user=restra -password=restra -connectRetries=60 migrate
     volumes:
-      - ${PWD}/src/main/resources/migrations:/flyway/sql
+      - ${PWD}/src/main/resources/db/migration:/flyway/sql
   db:
     image: postgres:15.0
     restart: always
