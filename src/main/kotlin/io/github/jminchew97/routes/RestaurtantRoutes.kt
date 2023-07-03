@@ -10,7 +10,7 @@ import io.github.jminchew97.storage.PostgresRestaurantStore
 import io.github.jminchew97.utils.Conversions
 import io.github.jminchew97.utils.isDigit
 import java.sql.SQLException
-import java.util.*
+import kotlinx.uuid.UUID
 
 fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
 
@@ -21,17 +21,15 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
             call.respond(appApi.getRestaurants())
         }
         get("{restaurant_id}") {
-            val restaurantId = call.parameters["restaurant_id"] ?: call.respond(
-                status = HttpStatusCode.BadRequest, "bad"
-            )
-            try {
-                UUID.fromString(restaurantId.toString())
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
-            }
-
-            val restaurant = appApi.getRestaurant(RestaurantId(UUID.fromString(restaurantId.toString())))
-            call.respond(
+            val restaurantId = call.parameters["restaurant_id"]
+            if (restaurantId.isNullOrBlank() || UUID.isValidUUIDString(restaurantId)) {
+                call.respond(HttpStatusCode.BadRequest, ResponseMessages.uuidNullOrImproper)
+            } else {
+                val restaurant = appApi.getRestaurant(
+                    RestaurantId(
+                        UUID(restaurantId)
+                    )
+                )
                 if (restaurant == null) {
                     call.respond(
                         HttpStatusCode(404, "Not found")
@@ -39,17 +37,14 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
                 } else {
                     call.respond(restaurant)
                 }
-            )
-
+            }
         }
         post {
             val restaurantObj: CreateRestaurant = call.receive<CreateRestaurant>()
-
             if (appApi.createRestaurant(restaurantObj)) call.respond(restaurantObj) else call.respond(
                 status = HttpStatusCode.Created,
                 restaurantObj
             )
-
         }
         put {
             val updateRest = call.receive<UpdateRestaurant>()
@@ -64,13 +59,7 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
             val restaurantId = call.parameters["restaurant_id"]
             if (restaurantId != null) {
                 try {
-                    UUID.fromString(restaurantId)
-                } catch (e: Exception) {
-                    call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
-                }
-
-                try {
-                    appApi.deleteRestaurant(RestaurantId(UUID.fromString(restaurantId)))
+                    appApi.deleteRestaurant(RestaurantId(UUID(restaurantId)))
                 } catch (ex: SQLException) {
                     println(ex.message)
                     call.respond(status = HttpStatusCode.InternalServerError, "An error occurred within the server")
@@ -91,70 +80,67 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
         // Menu routes
         get("/{restaurant_id}/menus") {
             val restaurantId = call.parameters["restaurant_id"]
-            try {
-                UUID.fromString(restaurantId)
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
+            if (restaurantId.isNullOrBlank() || UUID.isValidUUIDString(restaurantId)) {
+                call.respond(HttpStatusCode.BadRequest, ResponseMessages.uuidNullOrImproper)
+            } else {
+                call.respond(
+                    appApi.getMenusFromRestaurant(
+                        RestaurantId(UUID(restaurantId))
+                    )
+                )
             }
 
-            call.respond(
-                appApi.getMenusFromRestaurant(
-                    RestaurantId(UUID.fromString(restaurantId))
-                )
-            )
         }
         post("/{restaurant_id}/menus") {
             val restaurantId = call.parameters["restaurant_id"]
-            if (restaurantId == null) call.respond(HttpStatusCode.BadRequest)
-            try {
-                UUID.fromString(restaurantId)
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
+            if (restaurantId.isNullOrBlank() || !UUID.isValidUUIDString(restaurantId)) call.respond(
+                HttpStatusCode.BadRequest,
+                ResponseMessages.uuidNullOrImproper
+            )
+            else {
+                val menuNoRestaurantId: MenuReceive = call.receive<MenuReceive>()
+                val restId = RestaurantId(UUID(restaurantId))
+                val createMenu = CreateMenu(
+                    restId,
+                    menuNoRestaurantId.name
+                )
+
+                if (
+                    appApi.createMenu(
+                        CreateMenu(
+                            restId,
+                            createMenu.name
+                        )
+                    )
+                ) {
+                    call.respond(HttpStatusCode.Created)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
             }
 
-            val menuNoRestaurantId: MenuReceive = call.receive<MenuReceive>()
-
-            val restId = RestaurantId(UUID.fromString(restaurantId))
-            val createMenu = CreateMenu(
-                restId,
-                menuNoRestaurantId.name
-            )
-
-
-            if (
-                appApi.createMenu(
-                    CreateMenu(
-                        restId,
-                        createMenu.name
-                    )
-                )
-            ) call.respond(HttpStatusCode.Created) else call.respond(HttpStatusCode.BadRequest)
         }
         delete("/{restaurant_id}/menus/{menu_id}") {
             val restaurantIdParam: String? = call.parameters["restaurant_id"]
             val menuIdParam: String? = call.parameters["menu_id"]
 
-            if (restaurantIdParam == null || menuIdParam == null) {
+            if (restaurantIdParam.isNullOrBlank() || !UUID.isValidUUIDString(restaurantIdParam)
+                || menuIdParam.isNullOrBlank() || !UUID.isValidUUIDString(menuIdParam)
+            ) {
                 call.respond(
                     HttpStatusCode.BadRequest,
-                    "Either restaurant_id or menu_id missing from URI. Be sure to follow this format: /{restaurant_id}/menus/{menu_id} ."
+                    ResponseMessages.uuidNullOrImproper
+                )
+            } else {
+                if (appApi.deleteMenu(
+                        RestaurantId(UUID(restaurantIdParam)),
+                        MenuId(UUID(menuIdParam))
+                    )
+                ) call.respond(
+                    HttpStatusCode.NoContent,
+                    "Deleted menu successfully"
                 )
             }
-            try {
-                UUID.fromString(restaurantIdParam)
-                UUID.fromString(menuIdParam)
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
-            }
-
-            if (appApi.deleteMenu(
-                    RestaurantId(UUID.fromString(restaurantIdParam)),
-                    MenuId(UUID.fromString(menuIdParam))
-                )
-            ) call.respond(
-                HttpStatusCode.NoContent,
-                "Deleted menu successfully"
-            )
         }
         put("/menus/{menu_id}") {
             val restaurantIdParam = call.parameters["restaurant_id"]
@@ -162,60 +148,56 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
             // Use UpdateMenuReceive, to get JSON content for the new menu
             val updateMenuReceive = call.receive<UpdateMenuReceive>()
 
-            try {
-                UUID.fromString(restaurantIdParam)
-                UUID.fromString(menuIdParam)
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
-            }
-
-            // Combine the IDs from URI and also content from UpdateMenuReceive object
-            val newMenu = UpdateMenu(
-                RestaurantId(
-                    UUID.fromString(restaurantIdParam)
-                ),
-                MenuId(
-                    UUID.fromString(menuIdParam)
-                ),
-                updateMenuReceive.name
-            )
-
-            // Verify name is not empty and that the restaurant_id and menu_id are digits
-            if (newMenu.name == ""
+            if (restaurantIdParam.isNullOrBlank() || !UUID.isValidUUIDString(restaurantIdParam)
+                || menuIdParam.isNullOrBlank() || !UUID.isValidUUIDString(menuIdParam)
             ) {
                 call.respond(
                     HttpStatusCode.BadRequest,
-                    "Name parameter for resource cannot be empty. Make sure {restaurant_id} and {menu_id} in URI are digits only."
+                    ResponseMessages.uuidNullOrImproper
                 )
-            }
+            } else {
+                // Combine the IDs from URI and also content from UpdateMenuReceive object
+                val newMenu = UpdateMenu(
+                    RestaurantId(UUID(restaurantIdParam)),
+                    MenuId(UUID(menuIdParam)),
+                    updateMenuReceive.name
+                )
 
-            if (appApi.updateMenu(newMenu)) call.respond(
-                HttpStatusCode.OK,
-                "Menu updated successfully"
-            ) else // Menu record was not updated for other reason
-                call.respond(
-                    HttpStatusCode.NotFound,
-                    "Request could not be processed. Ensure menu attempting to request exists."
-                )
+                if (newMenu.name.isEmpty()
+                ) {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Name parameter for resource cannot be empty. Make sure {restaurant_id} and {menu_id} in URI are digits only."
+                    )
+                }
+
+                if (appApi.updateMenu(newMenu)) {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        "Menu updated successfully"
+                    )
+                } else // Menu record was not updated for other reason
+                {
+                    call.respond(
+                        HttpStatusCode.NotFound,
+                        "Request could not be processed. Ensure menu attempting to request exists."
+                    )
+                }
+            }
         }
+
         get("/menus/{menu_id}") {
             val menuId: String? = call.parameters["menu_id"]
-            if (menuId == null) {
-                call.respond(status = HttpStatusCode.BadRequest, "No menu id entered")
-            }
-            try {
-                UUID.fromString(menuId)
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
-            }
-
-            val menu = appApi.getMenu(MenuId(UUID.fromString(menuId)))
-
-            if (menu == null) {
-                call.respond(status = HttpStatusCode.NotFound, "Menu not found")
-
+            if (menuId.isNullOrBlank() || !UUID.isValidUUIDString(menuId)) {
+                call.respond(status = HttpStatusCode.BadRequest, ResponseMessages.uuidNullOrImproper)
             } else {
-                call.respond(menu)
+                val menu = appApi.getMenu(MenuId(UUID(menuId)))
+                if (menu == null) {
+                    call.respond(status = HttpStatusCode.NotFound, "Menu not found")
+
+                } else {
+                    call.respond(menu)
+                }
             }
         }
         //endregion
@@ -224,51 +206,45 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
         post("/{restaurant_id}/menus/{menu_id}/items") {
             val menuId = call.parameters["menu_id"]
             val restaurantId = call.parameters["restaurant_id"]
-            if (menuId == null || restaurantId == null) {
-                call.respond(HttpStatusCode.BadRequest, "Parameter in URI is null.")
+            if (menuId.isNullOrBlank() || !UUID.isValidUUIDString(menuId)
+                || restaurantId.isNullOrBlank() || !UUID.isValidUUIDString(restaurantId)
+            ) {
+                call.respond(HttpStatusCode.BadRequest, ResponseMessages.uuidNullOrImproper)
+            } else {
+                val cir: CreateItemReceive = call.receive<CreateItemReceive>()
+                val createItem = CreateItem(
+                    RestaurantId(UUID(restaurantId)),
+                    MenuId(UUID(menuId)),
+                    cir.name,
+                    cir.description,
+                    Conversions.convertMoneyStringToCents(cir.price),
+                    cir.itemType
+                )
+                if (appApi.createItem(createItem)) {
+                    call.respond(
+                        HttpStatusCode.Created,
+                        "item created"
+                    )
+                } else {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Item not created"
+                    )
+                }
             }
-
-            try {
-                UUID.fromString(menuId)
-                UUID.fromString(restaurantId)
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
-            }
-
-            val cir: CreateItemReceive = call.receive<CreateItemReceive>()
-
-            val createItem = CreateItem( //Convert CreateRecievedItem into CreateItem
-                RestaurantId(UUID.fromString(restaurantId)),
-                MenuId(UUID.fromString(menuId)),
-                cir.name,
-                cir.description,
-                Conversions.convertMoneyStringToCents(cir.price),
-                cir.itemType
-
-            )
-
-            if (appApi.createItem(createItem)) call.respond(
-                HttpStatusCode.Created,
-                "item created"
-            ) else call.respond(
-                HttpStatusCode.BadRequest,
-                "Item not created"
-            )
         }
 
         get("/menus/items/{item_id}") {
             val itemId = call.parameters["item_id"]
-            if (itemId == null) {
-                call.respond(HttpStatusCode.BadRequest, "Parameter in URI is null.")
+            if (itemId.isNullOrBlank() || !UUID.isValidUUIDString(itemId)) {
+                call.respond(HttpStatusCode.BadRequest, "Either empty, blank, or not valid UUID formats.")
             } else {
-                try {
-                    UUID.fromString(itemId)
-                } catch (e: Exception) {
-                    call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
+                val item = appApi.getItem(ItemId(UUID(itemId)))
+                if (item == null) {
+                    call.respond("Item is null.")
+                } else {
+                    call.respond(item)
                 }
-
-                val item = appApi.getItem(ItemId(UUID.fromString(itemId)))
-                if (item == null) call.respond("Item is null.") else call.respond(item)
             }
             //endregion
         }
@@ -277,112 +253,81 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
             call.respond(items)
         }
         put("/menus/items/{item_id}") {
-            val idParam = call.parameters["item_id"]
+            val itemId = call.parameters["item_id"]
 
             // Id Validation
-            if (idParam == null) call.respond(
-                HttpStatusCode.BadRequest,
-                "ItemId parameter in URI either null or not a digit."
-            )
-            try {
-                UUID.fromString(idParam)
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
+            if (itemId.isNullOrBlank() || !UUID.isValidUUIDString(itemId)) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    ResponseMessages.uuidNullOrImproper
+                )
+            } else {
+                val itemWithoutId = call.receive<CreateItem>()
+                val updateItem = UpdateItem(
+                    ItemId(UUID(itemId)),
+                    itemWithoutId.restaurantId,
+                    itemWithoutId.menuId,
+                    itemWithoutId.name,
+                    itemWithoutId.description,
+                    itemWithoutId.price,
+                    itemWithoutId.itemType
+                )
+                if (appApi.updateItem(updateItem)) call.respond(
+                    HttpStatusCode.OK,
+                    "Item updated"
+                ) else call.respond(
+                    HttpStatusCode.NotModified
+                )
             }
-
-
-            val itemWithoutId = call.receive<CreateItem>()
-
-            val updateItem = UpdateItem(
-                ItemId(UUID.fromString(idParam)),
-                itemWithoutId.restaurantId,
-                itemWithoutId.menuId,
-                itemWithoutId.name,
-                itemWithoutId.description,
-                itemWithoutId.price,
-                itemWithoutId.itemType
-            )
-            if (appApi.updateItem(updateItem)) call.respond(HttpStatusCode.OK, "Item updated") else call.respond(
-                HttpStatusCode.NotModified
-            )
         }
         delete("/{restaurant_id}/menus/{menu_id}/items/{item_id}") {
             val restaurantIdParam = call.parameters["restaurant_id"]
             val menuIdParam = call.parameters["menu_id"]
             val itemIdParam = call.parameters["item_id"]
             if (
-                restaurantIdParam == null || menuIdParam == null || itemIdParam == null
-            ) call.respond(HttpStatusCode.BadRequest, "One of the required parameters are null in URI.")
+                restaurantIdParam.isNullOrBlank() || !UUID.isValidUUIDString(restaurantIdParam)
+                || menuIdParam.isNullOrBlank() || !UUID.isValidUUIDString(menuIdParam) ||
+                itemIdParam.isNullOrBlank() || !UUID.isValidUUIDString(itemIdParam)
+            ) {
+                call.respond(HttpStatusCode.BadRequest, "One of the required parameters are null in URI.")
+            } else {
+                val restaurantId = RestaurantId(UUID(restaurantIdParam))
+                val menuId = MenuId(UUID(menuIdParam))
+                val itemId = ItemId(UUID(itemIdParam))
 
-            try {
-                UUID.fromString(restaurantIdParam)
-                UUID.fromString(menuIdParam)
-                UUID.fromString(itemIdParam)
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
+                if (appApi.deleteItem(
+                        itemId,
+                        restaurantId,
+                        menuId
+                    )
+                ){
+                    call.respond(HttpStatusCode.Accepted)
+                } else {
+                    call.respond(HttpStatusCode.NotModified, "Unable to delete record.")
+                }
             }
-
-            val restaurantId = RestaurantId(
-                UUID.fromString(restaurantIdParam)
-            )
-            val menuId = MenuId(
-                UUID.fromString(menuIdParam)
-            )
-            val itemId = ItemId(
-                UUID.fromString(itemIdParam)
-            )
-
-            if (appApi.deleteItem(
-                    itemId,
-                    restaurantId,
-                    menuId
-                )
-            )
-                call.respond(HttpStatusCode.Accepted)
         }
         get("/menus/{menu_id}/items") {
             val idParam = call.parameters["menu_id"]
-
-            try {
-                UUID.fromString(idParam)
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
+            if (idParam.isNullOrBlank() || !UUID.isValidUUIDString(idParam)){
+                call.respond(HttpStatusCode.BadRequest, ResponseMessages.uuidNullOrImproper)
+            } else {
+                val menuId = UUID(idParam)
+                val items = appApi.getItemsByMenu(MenuId(menuId))
+                call.respond(items)
             }
-
-            val menuId: UUID = UUID.fromString(idParam)
-
-            // Id Validation
-            if (idParam == null) call.respond(HttpStatusCode.BadRequest, "MenuId parameter in URI is null.")
-
-            val items = appApi.getItemsByMenu(
-                MenuId(menuId)
-            )
-
-            call.respond(items)
         }
         get("/{restaurant_id}/menus/items") {
-            val idParam = call.parameters["restaurant_id"]
-
-            try {
-                UUID.fromString(idParam)
-            } catch (e: Exception) {
-                call.respond("Error converting ID from URI into UUID. Make sure the ID in the URI is in valid UUID format.")
+            val restId = call.parameters["restaurant_id"]
+            if (restId.isNullOrBlank() || !UUID.isValidUUIDString(restId)){
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    ResponseMessages.uuidNullOrImproper
+                )
+            }else {
+                val items = appApi.getItemsByRestaurant(RestaurantId(UUID(restId)))
+                call.respond(items)
             }
-
-            val restaurantId: UUID = UUID.fromString(idParam)
-            // Id Validation
-            if (idParam == null) call.respond(
-                HttpStatusCode.BadRequest,
-                "RestaurantId parameter in URI either null or not a digit."
-            )
-            else if (idParam.toInt() < 0) call.respond(
-                HttpStatusCode.BadRequest,
-                "RestaurantId parameter in URI cannot be negative."
-            )
-
-            val items = appApi.getItemsByRestaurant(RestaurantId(restaurantId))
-
-            call.respond(items)
         }
     }
 }
