@@ -2,7 +2,7 @@ package io.github.jminchew97.models
 
 import io.github.jminchew97.UuidAsStringSerializer
 import kotlinx.serialization.Serializable
-import java.util.*
+import kotlinx.uuid.UUID
 
 
 @Serializable(with = UuidAsStringSerializer::class)

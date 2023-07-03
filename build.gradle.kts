@@ -36,5 +36,5 @@ dependencies {
     implementation("org.postgresql:postgresql:42.5.1")
     testImplementation("io.ktor:ktor-server-test-host-jvm:2.2.4")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
-    implementation("app.softwork:kotlinx-uuid-core:LATEST")
+    implementation("app.softwork:kotlinx-uuid-core:0.0.20")
 }

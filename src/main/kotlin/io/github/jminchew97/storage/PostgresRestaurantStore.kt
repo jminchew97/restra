@@ -20,7 +20,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
             while (rs.next()) {
                 val rr: Restaurant = Restaurant(
-                    RestaurantId(rs.getString("id")),
+                    RestaurantId(rs.getObject("id", kotlinx.uuid.UUID::class.java)),
                     rs.getString("name"),
                     rs.getString("address"),
                     rs.getString("food_type"),
@@ -38,13 +38,13 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
             val sqlStatement: String = "SELECT * FROM restaurants WHERE id=?;"
             val prp: PreparedStatement = connection.prepareStatement(sqlStatement)
-            prp.setString(1, id.unwrap.toString())
+            prp.setObject(1, id.unwrap)
             val rs: ResultSet = prp.executeQuery()
 
             if (!rs.next()) null else
 
                 Restaurant(
-                    RestaurantId(rs.getString("id")),
+                    RestaurantId(rs.getObject("id", kotlinx.uuid.UUID::class.java)),
                     rs.getString("name"),
                     rs.getString("address"),
                     rs.getString("food_type"),
@@ -105,8 +105,8 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             while (rs.next()) {
                 menuList.add(
                     Menu(
-                        MenuId(rs.getInt("id").toString()),
-                        RestaurantId(rs.getInt("restaurant_id").toString()),
+                        MenuId(rs.getObject("id", kotlinx.uuid.UUID::class.java)),
+                        RestaurantId(rs.getObject("restaurant_id", kotlinx.uuid.UUID::class.java)),
                         rs.getString("name"),
                         rs.getString("created_at")
                     )
@@ -128,8 +128,8 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             if (!rs.next()) null else
 
                 Menu(
-                    MenuId(rs.getInt("id").toString()),
-                    RestaurantId(rs.getInt("restaurant_id").toString()),
+                    MenuId(rs.getObject("id", kotlinx.uuid.UUID::class.java)),
+                    RestaurantId(rs.getObject("restaurant_id", kotlinx.uuid.UUID::class.java)),
                     rs.getString("name"),
                     rs.getString("created_at")
                 )
@@ -174,8 +174,8 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             while (rs.next()) {
                 menuList.add(
                     Menu(
-                        MenuId(rs.getString("id").toUuid()),
-                        RestaurantId(rs.getString("restaurant_id").toString()),
+                        MenuId(rs.getObject("id", kotlinx.uuid.UUID::class.java)),
+                        RestaurantId(rs.getObject("restaurant_id", kotlinx.uuid.UUID::class.java)),
                         rs.getString("name"),
                         rs.getString("created_at")
                     )
@@ -224,9 +224,9 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             val rs: ResultSet = prp.executeQuery()
             rs.next()
             Item(
-                ItemId(rs.getString("id").toUuid()),
-                MenuId(rs.getString("menu_id").toUuid()),
-                RestaurantId(rs.getString("restaurant_id").toUuid()),
+                ItemId(rs.getObject("id", kotlinx.uuid.UUID::class.java)),
+                MenuId(rs.getObject("menu_id", kotlinx.uuid.UUID::class.java)),
+                RestaurantId(rs.getObject("restaurant_id", kotlinx.uuid.UUID::class.java)),
                 rs.getString("name"),
                 rs.getString("description"),
                 Cents(rs.getInt("price")),
@@ -262,9 +262,9 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             while (rs.next()) {
                 itemList.add(
                     Item(
-                        ItemId(rs.getString("id").toUuid()),
-                        MenuId(rs.getString("menu_id").toUuid()),
-                        RestaurantId(rs.getString("restaurant_id").toUuid()),
+                        ItemId(rs.getObject("id", kotlinx.uuid.UUID::class.java)),
+                        MenuId(rs.getObject("menu_id", kotlinx.uuid.UUID::class.java)),
+                        RestaurantId(rs.getObject("restaurant_id", kotlinx.uuid.UUID::class.java)),
                         rs.getString("name"),
                         rs.getString("description"),
                         Cents(rs.getInt("price")),
@@ -315,9 +315,9 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             while (rs.next()) {
                 itemList.add(
                     Item(
-                        ItemId(rs.getString("id").toUuid()),
-                        MenuId(rs.getString("menu_id").toUuid()),
-                        RestaurantId(rs.getString("restaurant_id").toUuid()),
+                        ItemId(rs.getObject("id", kotlinx.uuid.UUID::class.java)),
+                        MenuId(rs.getObject("menu_id", kotlinx.uuid.UUID::class.java)),
+                        RestaurantId(rs.getObject("restaurant_id", kotlinx.uuid.UUID::class.java)),
                         rs.getString("name"),
                         rs.getString("description"),
                         Cents(rs.getInt("price")),
@@ -344,9 +344,9 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             while (rs.next()) {
                 itemList.add(
                     Item(
-                        ItemId(rs.getString("id").toUuid()),
-                        MenuId(rs.getString("menu_id").toUuid()),
-                        RestaurantId(rs.getString("restaurant_id").toUuid()),
+                        ItemId(rs.getObject("id", kotlinx.uuid.UUID::class.java)),
+                        MenuId(rs.getObject("menu_id", kotlinx.uuid.UUID::class.java)),
+                        RestaurantId(rs.getObject("restaurant_id", kotlinx.uuid.UUID::class.java)),
                         rs.getString("name"),
                         rs.getString("description"),
                         Cents(rs.getInt("price")),
