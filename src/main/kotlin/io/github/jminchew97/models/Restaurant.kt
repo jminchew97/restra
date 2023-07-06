@@ -4,7 +4,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 // Only used for retrieving already existing restaurant
-data class Restaurant(val id: RestaurantId, val name: String, val address: String, val foodType:String, val createdAt:String)
+data class Restaurant(
+    val id: RestaurantId,
+    val name: String,
+    val address: String,
+    val foodType: String,
+    val createdAt: String
+)
 
 
 @Serializable
@@ -13,13 +19,18 @@ data class Restaurant(val id: RestaurantId, val name: String, val address: Strin
  *  e.g `createdAt`. You need the `id` in order to actually retrieve the restaurant from the database, but
  * the `id` will not be edited.
  */
-data class UpdateRestaurant(val id: RestaurantId, val name: String, val address: String, val foodType:String)
+data class UpdateRestaurant(
+    val id: RestaurantId,
+    val name: String,
+    val address: String,
+    val foodType: String
+)
 
 @Serializable
 //This dataclass has no ID because object has not been entered into database yet
 
-data class CreateRestaurant(val name: String, val address: String, val foodType:String)
-
-@Serializable
-@JvmInline
-value class RestaurantId(val unwrap: String)
+data class CreateRestaurant(
+    val name: String,
+    val address: String,
+    val foodType: String
+)

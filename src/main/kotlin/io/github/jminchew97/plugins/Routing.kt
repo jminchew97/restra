@@ -23,7 +23,7 @@ fun Application.configureRouting(appApi: PostgresRestaurantStore) {
         menuRouting(appApi)
         route("/"){
             get{
-                call.respond("Working")
+                call.respond("working")
             }
         }
     }
