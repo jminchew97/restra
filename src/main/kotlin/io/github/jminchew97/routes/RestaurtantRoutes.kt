@@ -7,7 +7,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.github.jminchew97.storage.PostgresRestaurantStore
-import io.github.jminchew97.utils.Conversions
+import io.github.jminchew97.utils.convertStringToCents
 import java.sql.SQLException
 import kotlinx.uuid.UUID
 
@@ -217,7 +217,7 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
                     MenuId(UUID(menuId)),
                     cir.name,
                     cir.description,
-                    Conversions.convertMoneyStringToCents(cir.price),
+                    Cents.convertStringToCents(cir.price),
                     cir.itemType
                 )
                 if (appApi.createItem(createItem)) {
