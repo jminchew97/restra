@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE restaurants
 (
     id         UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -44,4 +45,3 @@ ALTER TABLE items
     ADD CONSTRAINT item_constraint_menu_id
         FOREIGN KEY (menu_id)
             REFERENCES menus (id);
-

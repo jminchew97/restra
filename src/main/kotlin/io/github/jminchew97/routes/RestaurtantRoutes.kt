@@ -8,7 +8,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.github.jminchew97.storage.PostgresRestaurantStore
 import io.github.jminchew97.utils.Conversions
-import io.github.jminchew97.utils.isDigit
 import java.sql.SQLException
 import kotlinx.uuid.UUID
 
@@ -22,7 +21,7 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
         }
         get("{restaurant_id}") {
             val restaurantId = call.parameters["restaurant_id"]
-            if (restaurantId.isNullOrBlank() || UUID.isValidUUIDString(restaurantId)) {
+            if (restaurantId.isNullOrBlank() || !UUID.isValidUUIDString(restaurantId)) {
                 call.respond(HttpStatusCode.BadRequest, ResponseMessages.uuidNullOrImproper)
             } else {
                 val restaurant = appApi.getRestaurant(
@@ -55,16 +54,17 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
 
             call.respond(updateRest)
         }
-        delete("{restaurant_id}") {
+        delete("/{restaurant_id}") {
             val restaurantId = call.parameters["restaurant_id"]
-            if (restaurantId != null) {
-                try {
-                    appApi.deleteRestaurant(RestaurantId(UUID(restaurantId)))
-                } catch (ex: SQLException) {
-                    println(ex.message)
-                    call.respond(status = HttpStatusCode.InternalServerError, "An error occurred within the server")
-                }
-            } else call.respond(status = HttpStatusCode.BadRequest, "bad")
+            if (restaurantId.isNullOrBlank() || !UUID.isValidUUIDString(restaurantId)) {
+                call.respond(HttpStatusCode.BadRequest, ResponseMessages.uuidNullOrImproper)
+            } else {
+                call.respond(
+                    appApi.deleteRestaurant(
+                        RestaurantId(UUID(restaurantId))
+                    )
+                )
+            }
 
             call.respond(HttpStatusCode(404, "Resource not found"))
         }
@@ -80,7 +80,7 @@ fun Route.restaurantRouting(appApi: PostgresRestaurantStore) {
         // Menu routes
         get("/{restaurant_id}/menus") {
             val restaurantId = call.parameters["restaurant_id"]
-            if (restaurantId.isNullOrBlank() || UUID.isValidUUIDString(restaurantId)) {
+            if (restaurantId.isNullOrBlank() || !UUID.isValidUUIDString(restaurantId)) {
                 call.respond(HttpStatusCode.BadRequest, ResponseMessages.uuidNullOrImproper)
             } else {
                 call.respond(
