@@ -7,8 +7,10 @@ import io.github.jminchew97.storage.PostgresRestaurantStore
 import kotlinx.uuid.UUID
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.ClassOrderer
+import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestClassOrder
 import org.junit.jupiter.api.TestMethodOrder
 import org.testcontainers.containers.PostgreSQLContainer
 open class TestContainerSingletonAgain {
@@ -41,7 +43,9 @@ open class TestContainerSingletonAgain {
     }
 }
 
-
+@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+@TestClassOrder(ClassOrderer.OrderAnnotation::class)
+@Order(1)
 class ImplementContainer: TestContainerSingletonAgain(){
     companion object{
         lateinit var testRestaurant:UUID
@@ -51,7 +55,7 @@ class ImplementContainer: TestContainerSingletonAgain(){
     fun isRunning(){
         assert(postgresContainer.isRunning)
     }
-
+    @Order(2)
     @Test
     fun testCreateAndGetAll(){
         assert(
@@ -64,12 +68,13 @@ class ImplementContainer: TestContainerSingletonAgain(){
         ))
         assert(appApi.getRestaurants().size == 1)
         testRestaurant = appApi.getRestaurants().toMutableList()[0].id.unwrap
-
     }
+    @Order(3)
     @Test
     fun testGetRestaurantById(){
         assert(appApi.getRestaurant(RestaurantId(testRestaurant)) != null)
     }
+    @Order(4)
     @Test
     fun testUpdateRestaurant(){
         assert(appApi.updateRestaurant(
@@ -81,6 +86,7 @@ class ImplementContainer: TestContainerSingletonAgain(){
             )
         ))
     }
+    @Order(5)
     @Test
     fun test3(){
         println(postgresContainer.containerId)
