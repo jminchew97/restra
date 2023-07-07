@@ -1,14 +1,15 @@
 package io.github.jminchew97
 import io.github.jminchew97.config.PostgresConnectInfo
 import io.github.jminchew97.models.CreateRestaurant
-import io.github.jminchew97.models.Restaurant
 import io.github.jminchew97.models.RestaurantId
 import io.github.jminchew97.models.UpdateRestaurant
 import io.github.jminchew97.storage.PostgresRestaurantStore
 import kotlinx.uuid.UUID
 import org.flywaydb.core.Flyway
-import org.junit.After
+import org.junit.jupiter.api.ClassOrderer
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestMethodOrder
 import org.testcontainers.containers.PostgreSQLContainer
 open class TestContainerSingletonAgain {
     companion object {
@@ -40,14 +41,17 @@ open class TestContainerSingletonAgain {
     }
 }
 
+
 class ImplementContainer: TestContainerSingletonAgain(){
     companion object{
-        var testRestaurant: Restaurant? = null
+        lateinit var testRestaurant:UUID
     }
+    @Order(1)
     @Test
     fun isRunning(){
         assert(postgresContainer.isRunning)
     }
+
     @Test
     fun testCreateAndGetAll(){
         assert(
@@ -58,15 +62,24 @@ class ImplementContainer: TestContainerSingletonAgain(){
                 foodType = "Southern"
             )
         ))
-        testRestaurant = appApi.getRestaurants().toMutableList()[0]
-        assert(testRestaurant != null)
+        assert(appApi.getRestaurants().size == 1)
+        testRestaurant = appApi.getRestaurants().toMutableList()[0].id.unwrap
+
     }
     @Test
     fun testGetRestaurantById(){
-
-        assert(testRestaurant?.let { appApi.getRestaurant(it.id) } != null)
-
-
+        assert(appApi.getRestaurant(RestaurantId(testRestaurant)) != null)
+    }
+    @Test
+    fun testUpdateRestaurant(){
+        assert(appApi.updateRestaurant(
+            UpdateRestaurant(
+                RestaurantId(testRestaurant),
+                "Dim Sum",
+                "123123 new address",
+                "Chinese"
+            )
+        ))
     }
     @Test
     fun test3(){
