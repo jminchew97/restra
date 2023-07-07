@@ -34,4 +34,3 @@ data class CreateRestaurant(
     val address: String,
     val foodType: String
 )
-

@@ -32,4 +32,3 @@ data class CreateMenu(
 data class MenuReceive(
     val name: String
 )
-

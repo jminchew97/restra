@@ -10,9 +10,10 @@ class HikariService(private val postgresConfig:PostgresConnectInfo) {
 
     private val ds: HikariDataSource = createDataSource()
 
-fun <A> withConnection(f: (Connection) -> A): A {
-    return ds.connection.use(f)
-}
+    fun <A> withConnection(f: (Connection) -> A): A {
+        return ds.connection.use(f)
+    }
+
     private fun createDataSource(): HikariDataSource {
         val config = HikariConfig()
 

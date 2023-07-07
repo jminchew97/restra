@@ -41,6 +41,5 @@ dependencies {
     testImplementation ("org.testcontainers:testcontainers:1.18.3")
     testImplementation ("org.testcontainers:junit-jupiter:1.18.3")
     testImplementation("org.flywaydb:flyway-core:9.20.0")
-
-
+    implementation("app.softwork:kotlinx-uuid-core:0.0.20")
 }

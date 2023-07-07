@@ -1,10 +1,7 @@
 package io.github.jminchew97.models
 
 import kotlinx.datetime.Instant
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import java.time.OffsetDateTime
-import java.util.*
 
 @Serializable
 data class CreateItem(
@@ -50,6 +47,3 @@ data class Item(
     val itemType: ItemType,
     val createAt:Instant
 )
-
-
-
