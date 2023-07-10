@@ -18,7 +18,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             val rs: ResultSet = prp.executeQuery()
             while (rs.next()) {
                 val rr: Restaurant = Restaurant(
-                    RestaurantId((rs.getObject("id",java.util.UUID::class.java).toKotlinUUID())),
+                    RestaurantId((rs.getObject("id", java.util.UUID::class.java).toKotlinUUID())),
                     rs.getString("name"),
                     rs.getString("address"),
                     rs.getString("food_type"),
@@ -35,7 +35,10 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
         val rr: Restaurant? = hs.withConnection { connection ->
             val sqlStatement: String = "SELECT * FROM restaurants WHERE id=?::UUID;"
             val prp: PreparedStatement = connection.prepareStatement(sqlStatement)
-            prp.setObject(1, id.unwrap.toJavaUUID()) // postgres doesnt know what a kotlinx.uuid is, needs to be JAVA UUID
+            prp.setObject(
+                1,
+                id.unwrap.toJavaUUID()
+            ) // postgres doesnt know what a kotlinx.uuid is, needs to be JAVA UUID
             val rs: ResultSet = prp.executeQuery()
             if (!rs.next()) null else
                 Restaurant(
@@ -191,7 +194,8 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
     override fun createItem(createItem: CreateItem): Boolean {
         val result = hs.withConnection { connection ->
-            val sql = "INSERT INTO items (menu_id, restaurant_id, name, price, description, item_type) VALUES (?::UUID, ?::UUID, ?, ?, ?, ?::item_type);"
+            val sql =
+                "INSERT INTO items (menu_id, restaurant_id, name, price, description, item_type) VALUES (?::UUID, ?::UUID, ?, ?, ?, ?::item_type);"
             val prp = connection.prepareStatement(sql)
 
             prp.setObject(1, createItem.menuId.unwrap.toJavaUUID())
@@ -230,7 +234,8 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
 
     override fun deleteItem(itemId: ItemId, restId: RestaurantId, menuId: MenuId): Boolean {
         val result = hs.withConnection { connection ->
-            val prp: PreparedStatement = connection.prepareStatement("DELETE FROM items WHERE id=?::UUID and menu_id=?::UUID and restaurant_id=?::UUID;")
+            val prp: PreparedStatement =
+                connection.prepareStatement("DELETE FROM items WHERE id=?::UUID and menu_id=?::UUID and restaurant_id=?::UUID;")
             prp.setObject(1, itemId.unwrap.toJavaUUID())
             prp.setObject(2, menuId.unwrap.toJavaUUID())
             prp.setObject(3, restId.unwrap.toJavaUUID())
@@ -255,7 +260,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
                         rs.getString("name"),
                         rs.getString("description"),
                         Cents(rs.getInt("price")),
-                        rs.getObject("item_type",ItemType::class.java),
+                        ItemType.valueOf(rs.getString("item_type")),
                         Instant.parse(rs.getString("created_at").replace(" ", "T"))
                     )
                 )
@@ -280,20 +285,19 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             prp.setString(3, updateItem.name)
             prp.setString(4, updateItem.description)
             prp.setInt(5, updateItem.price.unwrap)
-            prp.setObject(6, updateItem.itemType)
-            prp.setObject(7,updateItem.itemId.unwrap.toJavaUUID())
+            prp.setString(6, updateItem.itemType.toString())
+            prp.setObject(7, updateItem.itemId.unwrap.toJavaUUID())
             prp.executeUpdate() == 1
         }
         return result
     }
 
     override fun getItemsByMenu(menuId: MenuId): Collection<Item> {
-        val result = hs.withConnection {
-            connection ->
+        val result = hs.withConnection { connection ->
             val sql = "select * from items where menu_id=?::UUID"
             val prp = connection.prepareStatement(sql)
 
-            prp.setObject(1,menuId.unwrap.toJavaUUID())
+            prp.setObject(1, menuId.unwrap.toJavaUUID())
             val rs = prp.executeQuery()
 
             val itemList = mutableListOf<Item>()
@@ -317,12 +321,11 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
     }
 
     override fun getItemsByRestaurant(restaurantId: RestaurantId): Collection<Item> {
-        val result = hs.withConnection {
-                connection ->
+        val result = hs.withConnection { connection ->
             val sql = "select * from items where restaurant_id=?::UUID"
             val prp = connection.prepareStatement(sql)
 
-            prp.setObject(1,restaurantId.unwrap.toJavaUUID())
+            prp.setObject(1, restaurantId.unwrap.toJavaUUID())
             val rs = prp.executeQuery()
 
             val itemList = mutableListOf<Item>()
