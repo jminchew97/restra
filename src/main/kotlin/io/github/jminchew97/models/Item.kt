@@ -10,7 +10,7 @@ data class CreateItem(
     val name: String,
     val description: String,
     val price: Cents,
-    val itemType: String
+    val itemType: ItemType
 )
 @Serializable
 data class UpdateItem(
@@ -20,7 +20,7 @@ data class UpdateItem(
     val name: String,
     val description: String,
     val price: Cents,
-    val itemType: String
+    val itemType: ItemType
 )
 @Serializable
 /**
@@ -33,7 +33,7 @@ data class CreateItemReceive(
     val name: String,
     val description: String,
     val price: String,
-    val itemType: String
+    val itemType: ItemType
 )
 
 @Serializable

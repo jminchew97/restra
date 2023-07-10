@@ -71,16 +71,16 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
         return resultInt == 1
     }
 
-    override fun updateRestaurant(updateRest: UpdateRestaurant): Boolean {
+    override fun updateRestaurant(updateRestaurant: UpdateRestaurant): Boolean {
         val result: Int = hs.withConnection { connection ->
             val sqlString = "UPDATE restaurants SET name = ?, address = ?, food_type = ? WHERE id = ?::UUID"
 
             val prep: PreparedStatement = connection.prepareStatement(sqlString)
 
-            prep.setString(1, updateRest.name)
-            prep.setString(2, updateRest.address)
-            prep.setString(3, updateRest.foodType)
-            prep.setObject(4, updateRest.id.unwrap.toJavaUUID())
+            prep.setString(1, updateRestaurant.name)
+            prep.setString(2, updateRestaurant.address)
+            prep.setString(3, updateRestaurant.foodType)
+            prep.setObject(4, updateRestaurant.id.unwrap.toJavaUUID())
             prep.executeUpdate()
         }
         return result == 1
@@ -130,6 +130,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
     }
 
     override fun createMenu(menu: CreateMenu): Boolean {
+
 
         val result = hs.withConnection { connection ->
             val sql = "INSERT INTO menus (restaurant_id, name) VALUES (?::UUID,?);"
@@ -198,7 +199,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             prp.setString(3, createItem.name)
             prp.setInt(4, createItem.price.unwrap)
             prp.setString(5, createItem.description)
-            prp.setString(6, createItem.itemType.uppercase())
+            prp.setString(6, createItem.itemType.toString())
             prp.executeUpdate()
         }
         return result == 1
@@ -254,7 +255,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
                         rs.getString("name"),
                         rs.getString("description"),
                         Cents(rs.getInt("price")),
-                        ItemType.valueOf(rs.getString("item_type").uppercase()),
+                        rs.getObject("item_type",ItemType::class.java),
                         Instant.parse(rs.getString("created_at").replace(" ", "T"))
                     )
                 )
@@ -279,7 +280,7 @@ class PostgresRestaurantStore(private val hs: HikariService) : RestaurantStore {
             prp.setString(3, updateItem.name)
             prp.setString(4, updateItem.description)
             prp.setInt(5, updateItem.price.unwrap)
-            prp.setString(6, updateItem.itemType)
+            prp.setObject(6, updateItem.itemType)
             prp.setObject(7,updateItem.itemId.unwrap.toJavaUUID())
             prp.executeUpdate() == 1
         }
